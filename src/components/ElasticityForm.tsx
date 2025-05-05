@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -107,7 +108,8 @@ export function ElasticityForm({ onCalculationStart, onCalculationEnd }: Elastic
 
 
   return (
-    <Card className="w-full shadow-lg rounded-xl border-border/60 card-hover-effect">
+    // Removed card-hover-effect, added bg-card
+    <Card className="w-full shadow-lg rounded-xl border-border/60 bg-card">
         <CardHeader>
             <CardTitle className="flex items-center gap-2 text-2xl font-semibold">
               <Database size={24} />
