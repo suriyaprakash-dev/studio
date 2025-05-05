@@ -104,12 +104,12 @@ const FormLabel = React.forwardRef<
 })
 FormLabel.displayName = "FormLabel"
 
-// Reverted FormControl to standard ShadCN structure using Slot
+// Updated FormControl: Explicitly destructure and render children within Slot
 const FormControl = React.forwardRef<
   React.ElementRef<typeof Slot>,
   React.ComponentPropsWithoutRef<typeof Slot>
->(({ ...props }, ref) => {
-  const { error, formItemId, formDescriptionId, formMessageId } = useFormField()
+>(({ children, ...props }, ref) => { // Explicitly get children
+  const { error, formItemId, formDescriptionId, formMessageId } = useFormField();
 
   return (
     <Slot
@@ -121,11 +121,13 @@ const FormControl = React.forwardRef<
           : `${formDescriptionId} ${formMessageId}`
       }
       aria-invalid={!!error}
-      {...props} // {...props} includes children passed to FormControl
-    />
-  )
-})
-FormControl.displayName = "FormControl"
+      {...props} // Pass remaining props (like className) to Slot
+    >
+      {children} {/* Render children explicitly inside Slot */}
+    </Slot>
+  );
+});
+FormControl.displayName = "FormControl";
 
 
 const FormDescription = React.forwardRef<
