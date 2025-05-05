@@ -105,16 +105,16 @@ const FormLabel = React.forwardRef<
 FormLabel.displayName = "FormLabel"
 
 
-// Updated FormControl: Let Slot handle children implicitly
+// Updated FormControl: Explicitly pass children to Slot
 const FormControl = React.forwardRef<
   React.ElementRef<typeof Slot>,
   React.ComponentPropsWithoutRef<typeof Slot>
->(({ ...props }, ref) => { // Removed children from destructuring
+>(({ children, ...props }, ref) => { // Added children back to props
   const { error, formItemId, formDescriptionId, formMessageId } = useFormField();
 
   return (
-    <Slot // Slot implicitly expects children from where FormControl is used
-      ref={ref}
+    <Slot
+      ref={ref} // Pass the ref to Slot
       id={formItemId}
       aria-describedby={
         !error
@@ -123,8 +123,9 @@ const FormControl = React.forwardRef<
       }
       aria-invalid={!!error}
       {...props}
-      // No explicit {children} needed here; Slot handles it.
-    />
+    >
+      {children} {/* Explicitly render children */}
+    </Slot>
   );
 });
 FormControl.displayName = "FormControl";
