@@ -134,7 +134,16 @@ export function ElasticityForm({ onCalculationStart, onCalculationEnd }: Elastic
                             <FormLabel className="flex items-center gap-1.5 text-sm font-medium"><DollarSign size={16} /> Initial Price</FormLabel> {/* Bolder label */}
                             <FormControl>
                               {/* Ensure value is controlled, passing '' for undefined */}
-                              <Input type="number" placeholder="e.g., 10.00" {...field} value={field.value ?? ''} step="any" className="bg-background" /> {/* Adjusted background */}
+                              <Input
+                                type="number"
+                                placeholder="e.g., 10.00"
+                                onChange={field.onChange}
+                                onBlur={field.onBlur}
+                                name={field.name}
+                                ref={field.ref}
+                                value={field.value ?? ''}
+                                step="any"
+                                className="bg-background" /> {/* Adjusted background */}
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -147,7 +156,16 @@ export function ElasticityForm({ onCalculationStart, onCalculationEnd }: Elastic
                           <FormItem>
                              <FormLabel className="flex items-center gap-1.5 text-sm font-medium"><ShoppingCart size={16} /> Initial Quantity</FormLabel> {/* Bolder label */}
                             <FormControl>
-                              <Input type="number" placeholder="e.g., 100" {...field} value={field.value ?? ''} step="any" className="bg-background" /> {/* Adjusted background */}
+                              <Input
+                                type="number"
+                                placeholder="e.g., 100"
+                                onChange={field.onChange}
+                                onBlur={field.onBlur}
+                                name={field.name}
+                                ref={field.ref}
+                                value={field.value ?? ''}
+                                step="any"
+                                className="bg-background" /> {/* Adjusted background */}
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -165,7 +183,16 @@ export function ElasticityForm({ onCalculationStart, onCalculationEnd }: Elastic
                           <FormItem>
                              <FormLabel className="flex items-center gap-1.5 text-sm font-medium"><DollarSign size={16} /> Final Price</FormLabel> {/* Bolder label */}
                             <FormControl>
-                              <Input type="number" placeholder="e.g., 12.00" {...field} value={field.value ?? ''} step="any" className="bg-background" /> {/* Adjusted background */}
+                              <Input
+                                type="number"
+                                placeholder="e.g., 12.00"
+                                onChange={field.onChange}
+                                onBlur={field.onBlur}
+                                name={field.name}
+                                ref={field.ref}
+                                value={field.value ?? ''}
+                                step="any"
+                                className="bg-background" /> {/* Adjusted background */}
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -178,7 +205,16 @@ export function ElasticityForm({ onCalculationStart, onCalculationEnd }: Elastic
                           <FormItem>
                              <FormLabel className="flex items-center gap-1.5 text-sm font-medium"><ShoppingCart size={16} /> Final Quantity</FormLabel> {/* Bolder label */}
                             <FormControl>
-                              <Input type="number" placeholder="e.g., 80" {...field} value={field.value ?? ''} step="any" className="bg-background" /> {/* Adjusted background */}
+                              <Input
+                                type="number"
+                                placeholder="e.g., 80"
+                                onChange={field.onChange}
+                                onBlur={field.onBlur}
+                                name={field.name}
+                                ref={field.ref}
+                                value={field.value ?? ''}
+                                step="any"
+                                className="bg-background" /> {/* Adjusted background */}
                             </FormControl>
                             <FormMessage />
                           </FormItem>
