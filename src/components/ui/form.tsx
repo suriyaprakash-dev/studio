@@ -53,12 +53,15 @@ const useFormField = () => {
     throw new Error("useFormField should be used within <FormField>")
   }
 
-  if (!itemContext) {
-    throw new Error("useFormField should be used within <FormItem>")
+  // Check if itemContext exists before accessing its id
+  const id = itemContext?.id;
+  if (!id) {
+    // This might happen if useFormField is used outside FormItem.
+    // Depending on the desired behavior, you might throw an error or return default values.
+    // For now, let's throw an error as it was likely intended to be used within FormItem.
+    throw new Error("useFormField should be used within <FormItem>");
   }
 
-
-  const { id } = itemContext
 
   return {
     id,
@@ -109,12 +112,12 @@ const FormLabel = React.forwardRef<
 })
 FormLabel.displayName = "FormLabel"
 
-// Updated FormControl: Use Slot correctly. It implicitly passes props to its single child.
-// Children are passed down via {...props} spread onto Slot.
+
+// Updated FormControl to explicitly pass children to Slot
 const FormControl = React.forwardRef<
   React.ElementRef<typeof Slot>,
   React.ComponentPropsWithoutRef<typeof Slot>
->(({ ...props }, ref) => {
+>(({ children, ...props }, ref) => { // Explicitly accept children
   const { error, formItemId, formDescriptionId, formMessageId } = useFormField()
 
   return (
@@ -127,8 +130,10 @@ const FormControl = React.forwardRef<
           : `${formDescriptionId} ${formMessageId}`
       }
       aria-invalid={!!error}
-      {...props} // Spread the rest of the props (including children implicitly)
-    />
+      {...props} // Spread the rest of the props
+    >
+       {children} {/* Pass children explicitly to Slot */}
+    </Slot>
   )
 })
 FormControl.displayName = "FormControl"
@@ -185,4 +190,3 @@ export {
   FormMessage,
   FormField,
 }
-
