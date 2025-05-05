@@ -1,8 +1,9 @@
+
 'use client';
 
 import * as React from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation'; // Import useRouter
+import { useRouter } from 'next/navigation';
 import { useForm, type SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -13,6 +14,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
 import { LoaderCircle, LogIn, UserPlus } from 'lucide-react';
+import { auth } from '@/lib/firebase/client'; // Import Firebase auth instance
+import { createUserWithEmailAndPassword } from 'firebase/auth'; // Import Firebase auth functions, removed FirebaseError
 
 // Define the validation schema using Zod
 const formSchema = z.object({
@@ -28,7 +31,7 @@ type SignUpFormInput = z.infer<typeof formSchema>;
 
 export default function SignUpPage() {
   const { toast } = useToast();
-  const router = useRouter(); // Initialize useRouter
+  const router = useRouter();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
 
   const form = useForm<SignUpFormInput>({
@@ -38,29 +41,60 @@ export default function SignUpPage() {
       password: '',
       confirmPassword: '',
     },
-    mode: 'onChange', // Validate on change for better UX
+    mode: 'onChange',
   });
 
   // onSubmit handler
   const onSubmit: SubmitHandler<SignUpFormInput> = async (data) => {
     setIsSubmitting(true);
-    console.log("Signup data:", data); // Log signup data
+    try {
+      // Use Firebase to create the user
+      const userCredential = await createUserWithEmailAndPassword(auth, data.email, data.password);
+      const user = userCredential.user;
+      console.log("Firebase Signup successful:", user);
 
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1500));
+      // Show success message
+      toast({
+        title: "Signup Successful",
+        description: "Account created. Please log in.",
+        variant: "default",
+      });
 
-    // In a real app, you'd call your backend API here to create the user
-    // For now, just show a success message
-    toast({
-      title: "Signup Successful",
-      description: "Account created. Please log in.",
-      variant: "default",
-    });
+      // Redirect to login page after successful signup
+      router.push('/login');
 
-    // Redirect to login page after successful signup
-    router.push('/login');
+    } catch (error: any) { // Catch as 'any' or 'unknown' then check properties
+      console.error("Firebase Signup Error:", error);
+      let errorMessage = "An unexpected error occurred during signup.";
 
-    // No need to reset form or set submitting state due to navigation
+      // Check if the error has a 'code' property, typical for Firebase errors
+      if (error && typeof error === 'object' && 'code' in error) {
+          switch (error.code) {
+              case 'auth/email-already-in-use':
+                  errorMessage = 'This email address is already in use.';
+                  break;
+              case 'auth/invalid-email':
+                  errorMessage = 'The email address is not valid.';
+                  break;
+              case 'auth/weak-password':
+                  errorMessage = 'The password is too weak.';
+                  break;
+              default:
+                  // Use the error message if available, otherwise keep the generic one
+                  errorMessage = error.message ? `Signup failed: ${error.message}` : errorMessage;
+          }
+      } else if (error instanceof Error) {
+         errorMessage = error.message;
+      }
+
+      toast({
+        title: "Signup Failed",
+        description: errorMessage,
+        variant: "destructive",
+      });
+       setIsSubmitting(false); // Keep form active on error
+    }
+    // No need to set submitting false or reset form if redirecting on success
   };
 
   return (

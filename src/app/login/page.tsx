@@ -1,8 +1,9 @@
+
 'use client';
 
 import * as React from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation'; // Import useRouter
+import { useRouter } from 'next/navigation';
 import { useForm, type SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -13,6 +14,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
 import { LoaderCircle, LogIn, UserPlus } from 'lucide-react';
+import { auth } from '@/lib/firebase/client'; // Import Firebase auth instance
+import { signInWithEmailAndPassword } from 'firebase/auth'; // Import Firebase auth functions, removed FirebaseError
 
 // Define the validation schema using Zod
 const formSchema = z.object({
@@ -24,7 +27,7 @@ type LoginFormInput = z.infer<typeof formSchema>;
 
 export default function LoginPage() {
   const { toast } = useToast();
-  const router = useRouter(); // Initialize useRouter
+  const router = useRouter();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
 
   const form = useForm<LoginFormInput>({
@@ -33,45 +36,61 @@ export default function LoginPage() {
       email: '',
       password: '',
     },
-     mode: 'onChange', // Validate on change
+     mode: 'onChange',
   });
 
   // onSubmit handler
   const onSubmit: SubmitHandler<LoginFormInput> = async (data) => {
     setIsSubmitting(true);
-    console.log("Login data:", data); // Log login data
-
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1500));
-
-    // In a real app, you'd call your backend API here to authenticate the user
-    // For now, just show a success message and simulate success
-    toast({
-      title: "Login Successful",
-      description: "Welcome back!",
-      variant: "default",
-    });
-
-    // Set authentication flag in localStorage
     try {
-        localStorage.setItem('isAuthenticated', 'true');
-    } catch (error) {
-        console.error("Failed to set auth status in localStorage", error);
-        // Handle potential storage errors (e.g., private browsing)
+        // Use Firebase to sign in the user
+        const userCredential = await signInWithEmailAndPassword(auth, data.email, data.password);
+        const user = userCredential.user;
+        console.log("Firebase Login successful:", user);
+
+        // Show success message
         toast({
-            title: "Login State Error",
-            description: "Could not save login state. You might be logged out if you close the tab.",
+            title: "Login Successful",
+            description: "Welcome back!",
+            variant: "default",
+        });
+
+        // Redirect to dashboard/home page
+        router.push('/'); // Redirect to the main page
+
+    } catch (error: any) { // Catch as 'any' or 'unknown' then check properties
+        console.error("Firebase Login Error:", error);
+        let errorMessage = "An unexpected error occurred during login.";
+
+        // Check if the error has a 'code' property, typical for Firebase errors
+        if (error && typeof error === 'object' && 'code' in error) {
+            switch (error.code) {
+                case 'auth/user-not-found':
+                case 'auth/invalid-credential': // Covers wrong password and email not found in newer SDK versions
+                    errorMessage = 'Invalid email or password.';
+                    break;
+                case 'auth/invalid-email':
+                    errorMessage = 'The email address is not valid.';
+                    break;
+                case 'auth/too-many-requests':
+                    errorMessage = 'Access temporarily disabled due to too many failed login attempts. Please reset your password or try again later.';
+                    break;
+                default:
+                    // Use the error message if available, otherwise keep the generic one
+                    errorMessage = error.message ? `Login failed: ${error.message}` : errorMessage;
+            }
+        } else if (error instanceof Error) {
+            errorMessage = error.message;
+        }
+
+        toast({
+            title: "Login Failed",
+            description: errorMessage,
             variant: "destructive",
         });
+        setIsSubmitting(false); // Keep form active on error
     }
-
-
-    // Redirect to dashboard/home page
-    router.push('/'); // Redirect to the main page
-
-    // No need to reset form as we are navigating away
-    // form.reset();
-    // No need to setIsSubmitting(false) due to navigation
+    // No need to set submitting false or reset form if redirecting on success
   };
 
   return (

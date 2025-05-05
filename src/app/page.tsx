@@ -1,36 +1,42 @@
+
 // @ts-nocheck
 'use client';
 
 import * as React from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation'; // Import useRouter
+import { useRouter } from 'next/navigation';
 import { ElasticityForm } from '@/components/ElasticityForm';
 import { ElasticityResult } from '@/components/ElasticityResult';
 import type { ElasticityResultData } from '@/app/actions';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { Target, LogIn, UserPlus, LogOut } from 'lucide-react'; // Import icons
+import { Target, LogIn, UserPlus, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { auth } from '@/lib/firebase/client'; // Import Firebase auth
+import { onAuthStateChanged, signOut, User } from 'firebase/auth'; // Import Firebase auth functions
+import { useToast } from '@/hooks/use-toast'; // Import toast
 
 export default function Home() {
   const [result, setResult] = React.useState<ElasticityResultData | null>(null);
   const [isLoading, setIsLoading] = React.useState(false);
-  const [isAuthenticated, setIsAuthenticated] = React.useState(false);
+  const [user, setUser] = React.useState<User | null>(null); // Store Firebase user object
+  const [authLoading, setAuthLoading] = React.useState(true); // Add loading state for auth check
   const router = useRouter();
+  const { toast } = useToast(); // Get toast function
 
-  // Check authentication status on mount
+  // Check authentication status on mount using Firebase listener
   React.useEffect(() => {
-    try {
-        const authStatus = localStorage.getItem('isAuthenticated');
-        if (authStatus === 'true') {
-          setIsAuthenticated(true);
-        } else {
-          setIsAuthenticated(false);
-        }
-    } catch (error) {
-        console.error("Could not read auth status from localStorage", error);
-        setIsAuthenticated(false); // Default to not authenticated if storage fails
-    }
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser); // Set user to the Firebase user object or null
+      setAuthLoading(false); // Auth check complete
+      if (!currentUser) {
+          // Optional: Clear results if user logs out or isn't logged in initially
+          setResult(null);
+      }
+    });
+
+    // Cleanup subscription on unmount
+    return () => unsubscribe();
   }, []); // Empty dependency array ensures this runs only once on mount
 
   const handleCalculationStart = () => {
@@ -43,18 +49,39 @@ export default function Home() {
     setIsLoading(false);
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     try {
-        localStorage.removeItem('isAuthenticated');
+        await signOut(auth); // Sign out using Firebase
+        setUser(null); // Clear user state
+        setResult(null); // Clear results on logout
+        toast({
+            title: "Logged Out",
+            description: "You have been successfully logged out.",
+            variant: "default",
+        });
+        // Optional: Redirect to login or stay on home page in logged-out state
+        // router.push('/login');
     } catch (error) {
-        console.error("Failed to remove auth status from localStorage", error);
-        // Continue with logout even if storage removal fails
+        console.error("Firebase Logout Error:", error);
+         toast({
+            title: "Logout Failed",
+            description: error instanceof Error ? error.message : "An unexpected error occurred during logout.",
+            variant: "destructive",
+        });
     }
-    setIsAuthenticated(false);
-    setResult(null); // Clear results on logout
-    // Optional: Redirect to login or stay on home page in logged-out state
-    // router.push('/login');
   };
+
+  // Show loading indicator while checking auth status
+  if (authLoading) {
+      return (
+          <main className="flex min-h-screen flex-col items-center justify-center p-6">
+              <LoaderCircle className="animate-spin h-12 w-12 text-primary" />
+              <p className="mt-4 text-muted-foreground">Loading...</p>
+          </main>
+      );
+  }
+
+  const isAuthenticated = !!user; // Determine auth status based on user object
 
   return (
     <main className="flex min-h-screen flex-col items-center p-6 md:p-12 lg:p-16">
@@ -91,7 +118,7 @@ export default function Home() {
                 <Target size={36} className="text-primary"/> PriceLens
               </h1>
               <p className="text-xl text-muted-foreground">
-                {isAuthenticated ? 'Analyze Price Elasticity of Demand' : 'Welcome to PriceLens!'}
+                {isAuthenticated ? `Welcome, ${user.email || 'User'}!` : 'Welcome to PriceLens!'}
               </p>
                <Separator className="my-6 max-w-md mx-auto" />
                <p className="text-base text-muted-foreground max-w-3xl mx-auto leading-relaxed">
@@ -139,7 +166,7 @@ export default function Home() {
         )}
 
 
-        {/* Understanding Elasticity Card - Show only if authenticated or maybe always? Decided to show always for informational purposes */}
+        {/* Understanding Elasticity Card */}
         <Card className="w-full max-w-5xl mt-12 shadow-lg rounded-xl border-border/60 card-hover-effect">
             <CardHeader>
                 <CardTitle className="text-2xl font-semibold">Understanding Elasticity</CardTitle>
