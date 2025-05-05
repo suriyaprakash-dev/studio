@@ -14,23 +14,35 @@ import { calculateElasticity } from '@/app/actions';
 import { useToast } from '@/hooks/use-toast';
 import { DollarSign, ShoppingCart, Calculator } from 'lucide-react';
 
+// Refined preprocess function to handle empty strings and non-numeric values gracefully
+const preprocessNumber = (a: unknown) => {
+  const strVal = String(a ?? '').trim(); // Ensure input is string, handle null/undefined defensively, trim whitespace
+  if (strVal === '') return undefined; // Treat empty string as undefined for validation purposes
+  const num = parseFloat(strVal);
+  return isNaN(num) ? undefined : num; // Pass undefined if parsing fails, let z.number handle validation
+};
 
 const formSchema = z.object({
   initialPrice: z.preprocess(
-    (a) => parseFloat(z.string().min(1, "Initial price is required").parse(a)),
-    z.number({invalid_type_error: "Initial price must be a number"}).positive('Initial price must be positive')
+    preprocessNumber,
+    z.number({required_error: "Initial price is required", invalid_type_error: "Initial price must be a number"})
+     .positive({ message: 'Initial price must be positive' })
   ),
   finalPrice: z.preprocess(
-    (a) => parseFloat(z.string().min(1, "Final price is required").parse(a)),
-    z.number({invalid_type_error: "Final price must be a number"}).positive('Final price must be positive')
+    preprocessNumber,
+    z.number({required_error: "Final price is required", invalid_type_error: "Final price must be a number"})
+     .positive({ message: 'Final price must be positive' })
   ),
   initialQuantity: z.preprocess(
-    (a) => parseFloat(z.string().min(1, "Initial quantity is required").parse(a)),
-     z.number({invalid_type_error: "Initial quantity must be a number"}).positive('Initial quantity must be positive')
+    preprocessNumber,
+     z.number({required_error: "Initial quantity is required", invalid_type_error: "Initial quantity must be a number"})
+      .positive({ message: 'Initial quantity must be positive' }) // Assuming quantity must also be positive
+      // If quantity can be zero, use .nonnegative()
   ),
   finalQuantity: z.preprocess(
-    (a) => parseFloat(z.string().min(1, "Final quantity is required").parse(a)),
-    z.number({invalid_type_error: "Final quantity must be a number"}).positive('Final quantity must be positive')
+    preprocessNumber,
+    z.number({required_error: "Final quantity is required", invalid_type_error: "Final quantity must be a number"})
+     .positive({ message: 'Final quantity must be positive' }) // Assuming quantity must also be positive
   ),
 });
 
@@ -44,20 +56,24 @@ export function ElasticityForm({ onCalculationStart, onCalculationEnd }: Elastic
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
 
-  const form = useForm<ElasticityInput>({
+  const form = useForm<z.infer<typeof formSchema>>({ // Use inferred type from schema
     resolver: zodResolver(formSchema),
     defaultValues: {
-      initialPrice: undefined,
-      finalPrice: undefined,
-      initialQuantity: undefined,
-      finalQuantity: undefined,
+      initialPrice: '', // Use empty string instead of undefined
+      finalPrice: '',   // Use empty string instead of undefined
+      initialQuantity: '', // Use empty string instead of undefined
+      finalQuantity: '',  // Use empty string instead of undefined
     },
+    // Ensure validation happens on change or blur to show errors timely
+    mode: 'onChange',
   });
 
+ // onSubmit handler uses the type inferred from the validated schema output
  const onSubmit: SubmitHandler<ElasticityInput> = async (data) => {
     setIsSubmitting(true);
     onCalculationStart(); // Notify parent component that calculation is starting
     try {
+      // Data is already validated and parsed to numbers by Zod resolver
       console.log("Submitting data:", data); // Log data before sending
       const result = await calculateElasticity(data);
       console.log("Received result:", result); // Log received result
@@ -72,7 +88,7 @@ export function ElasticityForm({ onCalculationStart, onCalculationEnd }: Elastic
          toast({
            title: "Calculation Successful",
            description: `Price Elasticity: ${isFinite(result.elasticity) ? result.elasticity.toFixed(3) : (result.elasticity > 0 ? '∞' : '-∞')}`,
-           variant: "default", // Use default (blue theme) or 'success' if defined
+           variant: "default",
          });
        }
     } catch (error) {
@@ -113,6 +129,7 @@ export function ElasticityForm({ onCalculationStart, onCalculationEnd }: Elastic
                           <FormItem className="mb-4">
                             <FormLabel className="flex items-center gap-1"><DollarSign size={16} /> Initial Price</FormLabel>
                             <FormControl>
+                              {/* Pass field props directly; value will be '' initially */}
                               <Input type="number" placeholder="e.g., 10.00" {...field} step="any" />
                             </FormControl>
                             <FormMessage />
