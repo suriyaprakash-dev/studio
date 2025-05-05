@@ -104,15 +104,15 @@ const FormLabel = React.forwardRef<
 })
 FormLabel.displayName = "FormLabel"
 
-// Reverted FormControl to standard ShadCN structure
+// Reverted FormControl to standard ShadCN structure using Slot
 const FormControl = React.forwardRef<
   React.ElementRef<typeof Slot>,
-  React.ComponentPropsWithoutRef<typeof Slot> // Use standard props type
->(({ ...props }, ref) => { // Rely on ...props to contain children
+  React.ComponentPropsWithoutRef<typeof Slot>
+>(({ ...props }, ref) => {
   const { error, formItemId, formDescriptionId, formMessageId } = useFormField()
 
   return (
-    <Slot // Slot implicitly expects children from where FormControl is used
+    <Slot
       ref={ref}
       id={formItemId}
       aria-describedby={
