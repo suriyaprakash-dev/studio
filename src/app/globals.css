@@ -3,13 +3,13 @@
 @tailwind utilities;
 
 body {
-  font-family: Arial, Helvetica, sans-serif;
-  @apply bg-gradient-to-br from-background to-secondary/30 min-h-screen; /* Add subtle gradient */
+  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif; /* Use Geist Sans as primary */
+  @apply bg-gradient-to-br from-background to-secondary/40 min-h-screen; /* Slightly adjusted gradient */
 }
 
 @layer base {
   :root {
-    --background: 210 20% 96%; /* Lighter Gray-Blue */
+    --background: 220 15% 97%; /* Very light cool gray */
     --foreground: 210 10% 23%; /* Darker Gray-Blue */
     --card: 0 0% 100%;
     --card-foreground: 210 10% 23%;
@@ -17,9 +17,9 @@ body {
     --popover-foreground: 210 10% 23%;
     --primary: 204 70% 53%; /* Keep Blue */
     --primary-foreground: 0 0% 98%;
-    --secondary: 210 15% 92%; /* Slightly darker Gray-Blue */
+    --secondary: 220 10% 94%; /* Slightly darker cool gray */
     --secondary-foreground: 210 10% 23%;
-    --muted: 210 15% 92%; /* Use secondary for muted */
+    --muted: 220 10% 94%; /* Use secondary for muted */
     --muted-foreground: 210 8% 45%;
     --accent: 145 63% 49%; /* Keep Green */
     --accent-foreground: 0 0% 98%;
@@ -45,17 +45,17 @@ body {
   }
   .dark {
     /* Define dark mode colors based on the light theme */
-    --background: 210 10% 12%; /* Darker Blue/Gray */
+    --background: 220 10% 10%; /* Very dark cool gray/blue */
     --foreground: 210 15% 95%; /* Lighter Gray-Blue */
-    --card: 210 10% 15%; /* Very Dark Blue/Gray */
+    --card: 220 8% 13%; /* Slightly darker card background */
     --card-foreground: 210 15% 95%;
-    --popover: 210 10% 15%;
+    --popover: 220 8% 13%;
     --popover-foreground: 210 15% 95%;
     --primary: 204 70% 53%; /* Blue */
     --primary-foreground: 210 10% 15%; /* Dark for contrast on Blue */
-    --secondary: 210 10% 20%; /* Mid Dark Blue/Gray */
+    --secondary: 220 8% 15%; /* Slightly lighter dark cool gray/blue */
     --secondary-foreground: 210 15% 95%;
-    --muted: 210 10% 20%;
+    --muted: 220 8% 15%;
     --muted-foreground: 210 10% 60%;
     --accent: 145 63% 49%; /* Green */
     --accent-foreground: 0 0% 98%; /* Light for contrast on Green */

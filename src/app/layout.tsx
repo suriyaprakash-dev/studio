@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { Geist, Geist_Mono } from 'next/font/google';
+import { Geist } from 'next/font/google'; // Removed Geist_Mono
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 
@@ -8,10 +8,7 @@ const geistSans = Geist({
   subsets: ['latin'],
 });
 
-const geistMono = Geist_Mono({
-  variable: '--font-geist-mono',
-  subsets: ['latin'],
-});
+// Removed geistMono
 
 export const metadata: Metadata = {
   title: 'PriceLens: Price Elasticity Analysis',
@@ -25,7 +22,8 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+      {/* Apply font variable directly to body */}
+      <body className={`${geistSans.variable} font-sans antialiased`}>
         {children}
         <Toaster />
       </body>
