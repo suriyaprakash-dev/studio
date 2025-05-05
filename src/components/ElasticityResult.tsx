@@ -1,23 +1,23 @@
 import type { ElasticityResultData } from '@/app/actions';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import { TrendingUp, TrendingDown, Minus, BarChartBig, LoaderCircle, AlertCircle } from 'lucide-react'; // Replaced SVGs
 
 interface ElasticityResultProps {
   result: ElasticityResultData | null;
   isLoading: boolean;
 }
 
-function getBadgeVariant(classification: ElasticityResultData['classification']): 'default' | 'secondary' | 'destructive' | 'outline' {
+function getBadgeVariant(classification: ElasticityResultData['classification']): 'default' | 'secondary' | 'destructive' | 'outline' | 'accent' { // Added accent variant
     switch (classification) {
         case 'Elastic':
         case 'Perfectly Elastic':
-            return 'default'; // Blue badge for elastic
+            return 'accent'; // Use accent (Green) for elastic
         case 'Inelastic':
         case 'Perfectly Inelastic':
             return 'secondary'; // Gray badge for inelastic
         case 'Unit Elastic':
-            return 'outline'; // Outline badge for unit elastic
+            return 'default'; // Use primary (Blue) for unit elastic
         case 'Invalid Input':
             return 'destructive'; // Red badge for invalid input
         default:
@@ -29,12 +29,14 @@ function getIcon(classification: ElasticityResultData['classification']): React.
     switch (classification) {
         case 'Elastic':
         case 'Perfectly Elastic':
-            return <TrendingUp className="h-5 w-5 text-green-500" />; // Use actual color here
+            return <TrendingUp className="h-5 w-5 text-accent-foreground" />; // Use themed color
         case 'Inelastic':
         case 'Perfectly Inelastic':
-            return <TrendingDown className="h-5 w-5 text-orange-500" />; // Use actual color here
+            return <TrendingDown className="h-5 w-5 text-secondary-foreground" />; // Use themed color
         case 'Unit Elastic':
-            return <Minus className="h-5 w-5 text-yellow-500" />; // Use actual color here
+            return <Minus className="h-5 w-5 text-primary-foreground" />; // Use themed color
+        case 'Invalid Input':
+             return <AlertCircle className="h-5 w-5 text-destructive-foreground" />; // Use themed color
         default:
             return null;
     }
@@ -43,62 +45,66 @@ function getIcon(classification: ElasticityResultData['classification']): React.
 function getDescription(classification: ElasticityResultData['classification']): string {
     switch (classification) {
         case 'Elastic':
-            return 'Demand is sensitive to price changes. Lowering prices might increase total revenue.';
+            return 'Demand shows significant sensitivity to price changes. Consider strategic price decreases to potentially boost revenue.';
         case 'Inelastic':
-            return 'Demand is not very sensitive to price changes. Raising prices might increase total revenue.';
+            return 'Demand demonstrates low sensitivity to price changes. Price increases might enhance total revenue with minimal impact on quantity sold.';
         case 'Unit Elastic':
-            return 'Percentage change in quantity demanded is equal to the percentage change in price. Revenue is maximized.';
+            return 'Quantity demanded changes proportionally to price changes. Revenue is likely optimized at the current pricing.';
          case 'Perfectly Inelastic':
-            return 'Quantity demanded does not change regardless of price changes (theoretical).';
+            return 'Quantity demanded remains constant irrespective of price adjustments (theoretical, e.g., life-saving medication).';
         case 'Perfectly Elastic':
-            return 'Consumers will demand an infinite quantity at a specific price, but none at a higher price (theoretical).';
+            return 'Consumers demand unlimited quantity at a specific price, but none above it (theoretical market condition).';
         case 'Invalid Input':
-            return 'Please check your input values. Ensure prices and quantities are positive and changes occurred.';
+            return 'Calculation requires valid inputs. Please ensure prices and quantities are positive numbers and represent a change.';
         default:
-            return 'Enter data and calculate to see the result.';
+            return 'Input price and quantity data to view the elasticity analysis.';
     }
 }
 
 
 export function ElasticityResult({ result, isLoading }: ElasticityResultProps) {
   return (
-    <Card className="w-full shadow-md">
+    <Card className="w-full shadow-lg rounded-xl border-border/60 card-hover-effect h-full flex flex-col">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-bar-chart-big"><line x1="12" x2="12" y1="20" y2="4"/><path d="M17 20v-6"/><path d="M22 20v-10"/><path d="M7 20v-2"/><path d="M2 20v-4"/></svg>
+        <CardTitle className="flex items-center gap-2 text-2xl font-semibold">
+          <BarChartBig size={24}/>
           Analysis Results
         </CardTitle>
         <CardDescription>Price Elasticity of Demand (PED)</CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-5 flex-grow flex flex-col justify-center items-center text-center p-6">
         {isLoading ? (
-           <div className="flex items-center justify-center p-8">
-             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-loader-circle animate-spin"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
-             <span className="ml-2">Calculating...</span>
+           <div className="flex flex-col items-center justify-center space-y-3 p-8 text-muted-foreground">
+             <LoaderCircle className="animate-spin h-10 w-10" />
+             <span className="text-lg">Calculating Elasticity...</span>
            </div>
         ) : result ? (
           <>
             {result.error ? (
-               <Badge variant={getBadgeVariant(result.classification)} className="text-lg">
-                 {result.classification}
-               </Badge>
-            ) : (
-             <div className="flex items-center justify-between">
-                 <span className="text-3xl font-bold">
-                    {isFinite(result.elasticity) ? result.elasticity.toFixed(3) : (result.elasticity > 0 ? '∞' : '-∞')}
-                 </span>
-                 <Badge variant={getBadgeVariant(result.classification)} className="text-lg flex items-center gap-1">
+               <div className="flex flex-col items-center space-y-3">
+                 <Badge variant={getBadgeVariant(result.classification)} className="text-xl px-4 py-1.5 flex items-center gap-2">
                     {getIcon(result.classification)}
                     {result.classification}
                  </Badge>
+                 <p className="text-base text-destructive mt-2">{result.error}</p>
+                 <p className="text-base text-muted-foreground pt-2">{getDescription(result.classification)}</p>
+               </div>
+
+            ) : (
+             <div className="flex flex-col items-center space-y-3">
+                 <span className="text-5xl font-bold tracking-tight text-primary">
+                    {isFinite(result.elasticity) ? result.elasticity.toFixed(3) : (result.elasticity === Infinity ? '∞' : (result.elasticity === -Infinity ? '-∞' : 'N/A'))}
+                 </span>
+                 <Badge variant={getBadgeVariant(result.classification)} className="text-xl px-4 py-1.5 flex items-center gap-2 shadow-sm">
+                    {getIcon(result.classification)}
+                    {result.classification}
+                 </Badge>
+                 <p className="text-base text-muted-foreground pt-3 max-w-sm">{getDescription(result.classification)}</p>
              </div>
             )}
-
-            <p className="text-muted-foreground pt-2">{getDescription(result.classification)}</p>
-             {result.error && <p className="text-sm text-destructive mt-2">{result.error}</p>}
           </>
         ) : (
-          <p className="text-muted-foreground text-center p-8">Enter data points to calculate elasticity.</p>
+          <p className="text-lg text-muted-foreground p-8">Enter data points to calculate elasticity.</p>
         )}
       </CardContent>
     </Card>
