@@ -13,7 +13,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
-import { LoaderCircle, LogIn, UserPlus } from 'lucide-react';
+import { LoaderCircle, LogIn, UserPlus, AlertTriangle } from 'lucide-react'; // Added AlertTriangle
 import { auth } from '@/lib/firebase/client'; // Import Firebase auth instance
 import { createUserWithEmailAndPassword } from 'firebase/auth'; // Import Firebase auth functions
 
@@ -79,12 +79,12 @@ export default function SignUpPage() {
       // Show success message
       toast({
         title: "Signup Successful",
-        description: "Account created. Please log in.",
+        description: "Welcome! Account created.",
         variant: "default",
       });
 
-      // Redirect to login page after successful signup
-      router.push('/login');
+      // Redirect to main page after successful signup
+      router.push('/'); // Changed from '/login' to '/'
 
     } catch (error: any) { // Catch as 'any' or 'unknown' then check properties
       console.error("Firebase Signup Error:", error);
@@ -102,8 +102,9 @@ export default function SignUpPage() {
               case 'auth/weak-password':
                   errorMessage = 'The password is too weak.';
                   break;
-              case 'auth/api-key-not-valid': // Handle specific API key error explicitly
-                  errorMessage = 'Invalid Firebase configuration (API Key). Please contact support or check setup.';
+              case 'auth/api-key-not-valid.-please-pass-a-valid-api-key.': // Explicitly handle the specific API key error string
+              case 'auth/api-key-not-valid': // Also keep the general code check
+                  errorMessage = 'Invalid Firebase configuration (API Key). Please check setup or contact support.';
                    break;
               default:
                   // Use the error message if available, otherwise keep the generic one
@@ -155,7 +156,7 @@ export default function SignUpPage() {
                   <FormItem>
                     <FormLabel>Password</FormLabel>
                     <FormControl>
-                      <Input type="password" placeholder="••••••••" {...field} />
+                      <Input type="password" placeholder="•••••••• (min. 8 characters)" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -189,7 +190,9 @@ export default function SignUpPage() {
               </Button>
                {/* Show message if Firebase isn't ready */}
                {!firebaseReady && (
-                    <p className="text-xs text-destructive text-center mt-2">Firebase is not configured correctly. Signup is disabled.</p>
+                    <p className="text-xs text-destructive text-center mt-2 flex items-center justify-center gap-1">
+                        <AlertTriangle size={14} /> Firebase is not configured correctly. Signup is disabled.
+                    </p>
                )}
             </form>
           </Form>
@@ -209,3 +212,4 @@ export default function SignUpPage() {
     </main>
   );
 }
+
