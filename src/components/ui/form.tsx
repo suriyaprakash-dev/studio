@@ -104,13 +104,12 @@ const FormLabel = React.forwardRef<
 })
 FormLabel.displayName = "FormLabel"
 
-// Updated FormControl: Changed ref type to be more generic
+
+// Updated FormControl: Explicitly pass children to Slot and use ElementRef<typeof Slot> for ref
 const FormControl = React.forwardRef<
-  // The ref should ideally match the type of the underlying element (e.g., HTMLInputElement)
-  // Using a more generic type like React.ElementRef<typeof React.Component> as a possible fix attempt.
-  React.ElementRef<typeof React.Component>,
+  React.ElementRef<typeof Slot>, // Ref type should correspond to Slot
   React.ComponentPropsWithoutRef<typeof Slot>
->(({ children, ...props }, ref) => {
+>(({ children, ...props }, ref) => { // Explicitly accept children
   const { error, formItemId, formDescriptionId, formMessageId } = useFormField();
 
   return (
@@ -123,9 +122,9 @@ const FormControl = React.forwardRef<
           : `${formDescriptionId} ${formMessageId}`
       }
       aria-invalid={!!error}
-      {...props}
+      {...props} // Pass other props like className, etc.
     >
-       {/* Slot expects a single child to clone props onto */}
+      {/* Explicitly render the single child passed to FormControl */}
       {children}
     </Slot>
   );
@@ -184,3 +183,4 @@ export {
   FormMessage,
   FormField,
 }
+
