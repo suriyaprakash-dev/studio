@@ -104,16 +104,16 @@ const FormLabel = React.forwardRef<
 })
 FormLabel.displayName = "FormLabel"
 
-// Refined FormControl to explicitly handle children for Slot
+// Corrected FormControl to explicitly handle children for Slot
 const FormControl = React.forwardRef<
   React.ElementRef<typeof Slot>,
-  // Ensure children prop is explicitly typed
-  React.ComponentPropsWithoutRef<typeof Slot> & { children: React.ReactNode }
+  // Ensure children prop is explicitly typed and handled, Omit children from spread props
+  Omit<React.ComponentPropsWithoutRef<typeof Slot>, 'children'> & { children: React.ReactNode }
 >(({ children, ...props }, ref) => { // Destructure children explicitly
   const { error, formItemId, formDescriptionId, formMessageId } = useFormField()
 
   return (
-    <Slot
+    <Slot // Use Slot component
       ref={ref}
       id={formItemId}
       aria-describedby={
@@ -123,9 +123,9 @@ const FormControl = React.forwardRef<
           : `${formDescriptionId} ${formMessageId}`
       }
       aria-invalid={!!error}
-      {...props} // Spread any other props (usually none needed here from Controller)
+      {...props} // Spread any other props (excluding children)
     >
-      {/* Render the children passed from Controller's render prop inside Slot */}
+      {/* Render the single children passed from Controller's render prop inside Slot */}
       {children}
     </Slot>
   )
