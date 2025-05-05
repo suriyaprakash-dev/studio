@@ -5,7 +5,7 @@
 
 body {
   font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif; /* Use Geist Sans as primary */
-  @apply bg-gradient-to-br from-background to-secondary/40 min-h-screen; /* Slightly adjusted gradient */
+  @apply bg-gradient-to-br from-background to-secondary/40 min-h-screen; /* Slightly adjusted gradient - keep as is */
 }
 
 @layer base {
@@ -35,6 +35,8 @@ body {
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
     --radius: 0.75rem; /* Increased radius */
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.08), 0 2px 4px -2px rgb(0 0 0 / 0.05); /* Define a slightly stronger md shadow */
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.08), 0 4px 6px -4px rgb(0 0 0 / 0.05); /* Define a slightly stronger lg shadow */
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 240 5.3% 26.1%;
     --sidebar-primary: 240 5.9% 10%;
@@ -70,6 +72,8 @@ body {
     --chart-3: 30 80% 55%;
     --chart-4: 280 65% 60%;
     --chart-5: 340 75% 55%;
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.15), 0 2px 4px -2px rgb(0 0 0 / 0.1); /* Dark mode shadow */
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.15), 0 4px 6px -4px rgb(0 0 0 / 0.1); /* Dark mode shadow */
     --sidebar-background: 240 5.9% 10%;
     --sidebar-foreground: 240 4.8% 95.9%;
     --sidebar-primary: 224.3 76.3% 48%;
@@ -96,12 +100,14 @@ body {
   }
 }
 
-
-/* Remove hover effect class */
-/*
-@layer components {
-  .card-hover-effect {
-    @apply transition-all duration-300 ease-in-out hover:shadow-xl hover:-translate-y-1;
+/* Add custom shadow utilities using the CSS variables */
+@layer utilities {
+  .shadow-md-custom {
+    box-shadow: var(--shadow-md);
+  }
+  .shadow-lg-custom {
+    box-shadow: var(--shadow-lg);
   }
 }
-*/
+
+

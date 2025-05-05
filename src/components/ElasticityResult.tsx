@@ -65,8 +65,7 @@ function getDescription(classification: ElasticityResultData['classification']):
 
 export function ElasticityResult({ result, isLoading }: ElasticityResultProps) {
   return (
-    // Removed card-hover-effect, added bg-card
-    <Card className="w-full shadow-lg rounded-xl border-border/60 bg-card h-full flex flex-col">
+    <Card className="w-full shadow-lg-custom rounded-xl border-border/60 bg-card h-full flex flex-col"> {/* Use large custom shadow */}
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-2xl font-semibold">
           <BarChartBig size={24}/>
@@ -74,19 +73,19 @@ export function ElasticityResult({ result, isLoading }: ElasticityResultProps) {
         </CardTitle>
         <CardDescription>Price Elasticity of Demand (PED)</CardDescription>
       </CardHeader>
-      {/* Adjusted padding and alignment for better centering */}
-      <CardContent className="flex-grow flex flex-col justify-center items-center text-center p-6 min-h-[200px]">
+      {/* Adjusted padding and alignment for better centering and vertical space */}
+      <CardContent className="flex-grow flex flex-col justify-center items-center text-center p-8 min-h-[220px]"> {/* Increased padding and min-height */}
         {isLoading ? (
-           <div className="flex flex-col items-center justify-center space-y-3 text-muted-foreground">
-             <LoaderCircle className="animate-spin h-10 w-10" />
+           <div className="flex flex-col items-center justify-center space-y-4 text-muted-foreground"> {/* Increased space */}
+             <LoaderCircle className="animate-spin h-12 w-12" /> {/* Increased size */}
              <span className="text-lg mt-2">Calculating...</span>
            </div>
         ) : result ? (
           <>
             {result.error ? (
-               <div className="flex flex-col items-center space-y-3">
+               <div className="flex flex-col items-center space-y-4"> {/* Increased space */}
                   {/* Ensure badge takes full width if needed or centered */}
-                 <Badge variant={getBadgeVariant(result.classification)} className="text-lg px-4 py-1 flex items-center gap-2">
+                 <Badge variant={getBadgeVariant(result.classification)} className="text-lg px-5 py-1.5 flex items-center gap-2 shadow-md"> {/* Larger padding, shadow */}
                     {getIcon(result.classification)}
                     {result.classification}
                  </Badge>
@@ -95,15 +94,15 @@ export function ElasticityResult({ result, isLoading }: ElasticityResultProps) {
                </div>
 
             ) : (
-             <div className="flex flex-col items-center space-y-3">
-                 <span className="text-5xl font-bold tracking-tight text-primary mb-1">
+             <div className="flex flex-col items-center space-y-4"> {/* Increased space */}
+                 <span className="text-6xl font-bold tracking-tight text-primary mb-2"> {/* Larger text, adjusted margin */}
                     {isFinite(result.elasticity) ? result.elasticity.toFixed(3) : (result.elasticity === Infinity ? '∞' : (result.elasticity === -Infinity ? '-∞' : 'N/A'))}
                  </span>
-                 <Badge variant={getBadgeVariant(result.classification)} className="text-lg px-4 py-1 flex items-center gap-2 shadow-sm">
+                 <Badge variant={getBadgeVariant(result.classification)} className="text-lg px-5 py-1.5 flex items-center gap-2 shadow-md"> {/* Larger padding, shadow */}
                     {getIcon(result.classification)}
                     {result.classification}
                  </Badge>
-                 <p className="text-sm text-muted-foreground pt-3 max-w-xs">{getDescription(result.classification)}</p>
+                 <p className="text-sm text-muted-foreground pt-4 max-w-xs">{getDescription(result.classification)}</p> {/* Adjusted top padding */}
              </div>
             )}
           </>

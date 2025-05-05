@@ -108,7 +108,7 @@ export function ElasticityForm({ onCalculationStart, onCalculationEnd }: Elastic
 
 
   return (
-    <Card className="w-full shadow-lg rounded-xl border-border/60 bg-card">
+    <Card className="w-full shadow-lg-custom rounded-xl border-border/60 bg-card"> {/* Use large custom shadow */}
         <CardHeader>
             <CardTitle className="flex items-center gap-2 text-2xl font-semibold">
               <Database size={24} />
@@ -121,17 +121,17 @@ export function ElasticityForm({ onCalculationStart, onCalculationEnd }: Elastic
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                    <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                     {/* Initial Point Group */}
-                    <div className="space-y-4 p-5 bg-secondary/30 rounded-lg border border-border/40">
-                      <h3 className="text-lg font-medium text-foreground -mb-1">Initial Point (Point 1)</h3>
+                    <div className="space-y-4 p-5 bg-muted/40 rounded-lg border border-border/30 shadow-inner"> {/* Softer background, border, inner shadow */}
+                      <h3 className="text-lg font-medium text-foreground mb-1">Initial Point (Point 1)</h3> {/* Adjusted margin */}
                        <FormField
                         control={form.control}
                         name="initialPrice"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="flex items-center gap-1.5 text-sm"><DollarSign size={16} /> Initial Price</FormLabel>
+                            <FormLabel className="flex items-center gap-1.5 text-sm font-medium"><DollarSign size={16} /> Initial Price</FormLabel> {/* Bolder label */}
                             <FormControl>
                               {/* Ensure value is controlled, passing '' for undefined */}
-                              <Input type="number" placeholder="e.g., 10.00" {...field} value={field.value ?? ''} step="any" />
+                              <Input type="number" placeholder="e.g., 10.00" {...field} value={field.value ?? ''} step="any" className="bg-background" /> {/* Adjusted background */}
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -142,9 +142,9 @@ export function ElasticityForm({ onCalculationStart, onCalculationEnd }: Elastic
                         name="initialQuantity"
                         render={({ field }) => (
                           <FormItem>
-                             <FormLabel className="flex items-center gap-1.5 text-sm"><ShoppingCart size={16} /> Initial Quantity</FormLabel>
+                             <FormLabel className="flex items-center gap-1.5 text-sm font-medium"><ShoppingCart size={16} /> Initial Quantity</FormLabel> {/* Bolder label */}
                             <FormControl>
-                              <Input type="number" placeholder="e.g., 100" {...field} value={field.value ?? ''} step="any" />
+                              <Input type="number" placeholder="e.g., 100" {...field} value={field.value ?? ''} step="any" className="bg-background" /> {/* Adjusted background */}
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -153,16 +153,16 @@ export function ElasticityForm({ onCalculationStart, onCalculationEnd }: Elastic
                     </div>
 
                     {/* Final Point Group */}
-                     <div className="space-y-4 p-5 bg-secondary/30 rounded-lg border border-border/40">
-                      <h3 className="text-lg font-medium text-foreground -mb-1">Final Point (Point 2)</h3>
+                     <div className="space-y-4 p-5 bg-muted/40 rounded-lg border border-border/30 shadow-inner"> {/* Softer background, border, inner shadow */}
+                      <h3 className="text-lg font-medium text-foreground mb-1">Final Point (Point 2)</h3> {/* Adjusted margin */}
                       <FormField
                         control={form.control}
                         name="finalPrice"
                         render={({ field }) => (
                           <FormItem>
-                             <FormLabel className="flex items-center gap-1.5 text-sm"><DollarSign size={16} /> Final Price</FormLabel>
+                             <FormLabel className="flex items-center gap-1.5 text-sm font-medium"><DollarSign size={16} /> Final Price</FormLabel> {/* Bolder label */}
                             <FormControl>
-                              <Input type="number" placeholder="e.g., 12.00" {...field} value={field.value ?? ''} step="any" />
+                              <Input type="number" placeholder="e.g., 12.00" {...field} value={field.value ?? ''} step="any" className="bg-background" /> {/* Adjusted background */}
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -173,9 +173,9 @@ export function ElasticityForm({ onCalculationStart, onCalculationEnd }: Elastic
                         name="finalQuantity"
                         render={({ field }) => (
                           <FormItem>
-                             <FormLabel className="flex items-center gap-1.5 text-sm"><ShoppingCart size={16} /> Final Quantity</FormLabel>
+                             <FormLabel className="flex items-center gap-1.5 text-sm font-medium"><ShoppingCart size={16} /> Final Quantity</FormLabel> {/* Bolder label */}
                             <FormControl>
-                              <Input type="number" placeholder="e.g., 80" {...field} value={field.value ?? ''} step="any" />
+                              <Input type="number" placeholder="e.g., 80" {...field} value={field.value ?? ''} step="any" className="bg-background" /> {/* Adjusted background */}
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -184,7 +184,7 @@ export function ElasticityForm({ onCalculationStart, onCalculationEnd }: Elastic
                      </div>
                   </div>
 
-                  <Button type="submit" disabled={isSubmitting} className="w-full mt-8 text-lg py-3 rounded-lg transition-transform transform hover:scale-105">
+                  <Button type="submit" disabled={isSubmitting} className="w-full mt-8 text-lg py-3 rounded-lg transition-all transform hover:scale-[1.02] hover:shadow-md active:scale-[0.98] shadow-sm"> {/* Enhanced button interaction */}
                     {isSubmitting ? (
                        <>
                          <LoaderCircle className="animate-spin mr-2" size={20} />

@@ -10,7 +10,7 @@ import { ElasticityResult } from '@/components/ElasticityResult';
 import type { ElasticityResultData } from '@/app/actions';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { Target, LogIn, UserPlus, LogOut, LoaderCircle, AlertTriangle, BookOpen } from 'lucide-react'; // Added BookOpen
+import { Target, LogIn, UserPlus, LogOut, LoaderCircle, AlertTriangle, BookOpen, Settings } from 'lucide-react'; // Added Settings icon
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 
@@ -97,7 +97,7 @@ export default function Home() {
 
   if (authLoading) {
       return (
-          <main className="flex min-h-screen flex-col items-center justify-center p-6">
+          <main className="flex min-h-screen flex-col items-center justify-center p-6 bg-background">
               <LoaderCircle className="animate-spin h-12 w-12 text-primary" />
               <p className="mt-4 text-muted-foreground">Checking login status...</p>
           </main>
@@ -107,37 +107,42 @@ export default function Home() {
   const isAuthenticated = !!user;
 
   return (
-    <div className="flex min-h-screen flex-col"> {/* Changed main to div for more flexibility if needed */}
+    <div className="flex min-h-screen flex-col bg-gradient-to-br from-background to-secondary/40"> {/* Applied gradient to the outer div */}
         {/* Header Bar */}
-        <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-            <div className="container flex h-14 max-w-screen-2xl items-center justify-between">
+        <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 shadow-sm"> {/* Added slight shadow */}
+            <div className="container flex h-16 max-w-screen-2xl items-center justify-between"> {/* Increased height */}
                 {/* Logo/Title */}
-                <Link href="/" className="flex items-center gap-2 font-bold text-lg text-primary">
-                    <Target size={24} />
+                <Link href="/" className="flex items-center gap-2.5 font-bold text-xl text-primary transition-transform hover:scale-105"> {/* Increased gap, size, added hover effect */}
+                    <Target size={26} />
                     <span>PriceLens</span>
                 </Link>
 
                 {/* Auth Buttons */}
-                 <div className="flex items-center gap-2">
+                 <div className="flex items-center gap-3"> {/* Increased gap */}
                     {isAuthenticated ? (
                         <>
                             <span className="text-sm text-muted-foreground hidden sm:inline-block mr-2">
                                 {user?.email || 'User'}
                             </span>
-                            <Button variant="ghost" size="sm" onClick={handleLogout} className="flex items-center gap-1.5">
+                             {/* Optional Settings Button (example) */}
+                            <Button variant="ghost" size="icon" className="h-9 w-9 hidden sm:flex">
+                                <Settings size={18} />
+                                <span className="sr-only">Settings</span>
+                            </Button>
+                            <Button variant="ghost" size="sm" onClick={handleLogout} className="flex items-center gap-1.5 text-sm font-medium"> {/* Adjusted size, weight */}
                                 <LogOut size={16} />
                                 <span className="hidden sm:inline">Logout</span>
                             </Button>
                         </>
                     ) : (
                         <>
-                            <Button variant="ghost" size="sm" asChild>
+                            <Button variant="ghost" size="sm" asChild className="text-sm font-medium"> {/* Adjusted size, weight */}
                             <Link href="/login" className="flex items-center gap-1.5">
                                 <LogIn size={16} />
                                 <span className="hidden sm:inline">Login</span>
                             </Link>
                             </Button>
-                            <Button variant="outline" size="sm" asChild>
+                            <Button variant="default" size="sm" asChild className="text-sm font-medium shadow-sm"> {/* Adjusted size, weight, added default variant + shadow */}
                             <Link href="/signup" className="flex items-center gap-1.5">
                                 <UserPlus size={16} />
                                 <span className="hidden sm:inline">Sign Up</span>
@@ -150,51 +155,51 @@ export default function Home() {
         </header>
 
        {/* Main Content Area */}
-        <main className="flex-1 container max-w-6xl mx-auto px-4 py-10 md:py-16 lg:py-20">
+        <main className="flex-1 container max-w-6xl mx-auto px-4 py-12 md:py-20 lg:py-24"> {/* Increased padding */}
 
              {/* Hero Section */}
-            <section className="text-center mb-12 md:mb-16 lg:mb-20">
-                 <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-foreground mb-4">
+            <section className="text-center mb-16 md:mb-20 lg:mb-24"> {/* Increased bottom margin */}
+                 <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-foreground mb-5 tracking-tight"> {/* Bolder, tighter tracking */}
                     Analyze Price Elasticity
                  </h1>
-                 <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed mb-6">
+                 <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed mb-8"> {/* Slightly increased bottom margin */}
                       {isAuthenticated
                         ? 'Input your initial and final price and quantity data points below to compute the Price Elasticity of Demand (PED) using the midpoint formula, helping you make informed pricing decisions.'
                         : 'Gain insights into how price adjustments impact consumer demand. Log in or sign up to use the calculator.'
                        }
                   </p>
-                  <Separator className="max-w-sm mx-auto" />
+                  <Separator className="max-w-md mx-auto bg-border/60" /> {/* Slightly more visible separator */}
              </section>
 
 
             {/* Main Grid - Calculator or Login Prompt */}
             {isAuthenticated ? (
-                <section className="w-full grid grid-cols-1 lg:grid-cols-5 gap-8 lg:gap-12 items-start mb-16">
+                <section className="w-full grid grid-cols-1 lg:grid-cols-5 gap-10 lg:gap-14 items-start mb-20"> {/* Increased gap, margin */}
                     <div className="lg:col-span-3">
                         <ElasticityForm
                             onCalculationStart={handleCalculationStart}
                             onCalculationEnd={handleCalculationEnd}
                         />
                     </div>
-                    <div className="lg:col-span-2 lg:sticky lg:top-20"> {/* Make results sticky */}
+                    <div className="lg:col-span-2 lg:sticky lg:top-24"> {/* Make results sticky, adjust top offset */}
                         <ElasticityResult result={result} isLoading={isLoading} />
                     </div>
                 </section>
             ) : (
-                <section className="flex justify-center mb-16">
-                    <Card className="w-full max-w-lg text-center p-8 bg-card border rounded-xl shadow-md">
+                <section className="flex justify-center mb-20"> {/* Increased margin */}
+                    <Card className="w-full max-w-lg text-center p-8 bg-card border rounded-xl shadow-lg-custom"> {/* Use large custom shadow */}
                         <CardHeader>
                             <CardTitle className="text-2xl font-semibold">Get Started</CardTitle>
                             <CardDescription>Please log in or sign up to use the Price Elasticity Calculator.</CardDescription>
                         </CardHeader>
-                        <CardContent className="flex flex-col sm:flex-row justify-center gap-4">
-                            <Button asChild size="lg" className="w-full sm:w-auto">
+                        <CardContent className="flex flex-col sm:flex-row justify-center gap-4 mt-2"> {/* Added top margin */}
+                            <Button asChild size="lg" className="w-full sm:w-auto shadow-md hover:shadow-lg transition-shadow"> {/* Added shadows */}
                                 <Link href="/login" className="flex items-center justify-center gap-1.5">
                                     <LogIn size={18} />
                                     Login
                                 </Link>
                             </Button>
-                            <Button variant="outline" asChild size="lg" className="w-full sm:w-auto">
+                            <Button variant="outline" asChild size="lg" className="w-full sm:w-auto shadow-sm hover:shadow-md transition-shadow"> {/* Added shadows */}
                                 <Link href="/signup" className="flex items-center justify-center gap-1.5">
                                     <UserPlus size={18} />
                                     Sign Up
@@ -207,7 +212,7 @@ export default function Home() {
 
             {/* Understanding Elasticity Section */}
             <section className="w-full mb-16">
-                <Card className="shadow-lg rounded-xl border-border/60 bg-card">
+                <Card className="shadow-lg-custom rounded-xl border-border/60 bg-card"> {/* Use large custom shadow */}
                     <CardHeader>
                         <CardTitle className="text-2xl font-semibold flex items-center gap-2">
                             <BookOpen size={22} /> Understanding Elasticity
@@ -229,14 +234,20 @@ export default function Home() {
         </main>
 
         {/* Footer */}
-        <footer className="py-6 border-t bg-background">
-            <div className="container max-w-6xl mx-auto flex flex-col sm:flex-row justify-between items-center text-sm text-muted-foreground">
+        <footer className="py-8 border-t bg-background/80"> {/* Increased padding, slight transparency */}
+            <div className="container max-w-6xl mx-auto flex flex-col sm:flex-row justify-between items-center text-sm text-muted-foreground gap-4"> {/* Added gap */}
                 <p>&copy; {new Date().getFullYear()} PriceLens. All rights reserved.</p>
-                <nav className="flex gap-4 mt-2 sm:mt-0">
-                    <Link href="/contact" className="hover:text-primary hover:underline underline-offset-2">
+                <nav className="flex gap-6"> {/* Increased gap */}
+                    <Link href="/contact" className="hover:text-primary hover:underline underline-offset-4 transition-colors"> {/* Added transition */}
                         Contact Us
                     </Link>
                     {/* Add other footer links like Privacy Policy, Terms of Service if needed */}
+                    <Link href="#" className="hover:text-primary hover:underline underline-offset-4 transition-colors"> {/* Placeholder */}
+                        Privacy Policy
+                    </Link>
+                     <Link href="#" className="hover:text-primary hover:underline underline-offset-4 transition-colors"> {/* Placeholder */}
+                        Terms of Service
+                    </Link>
                 </nav>
             </div>
         </footer>
