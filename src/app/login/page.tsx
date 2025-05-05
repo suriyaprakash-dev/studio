@@ -15,7 +15,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { useToast } from '@/hooks/use-toast';
 import { LoaderCircle, LogIn, UserPlus } from 'lucide-react';
 import { auth } from '@/lib/firebase/client'; // Import Firebase auth instance
-import { signInWithEmailAndPassword } from 'firebase/auth'; // Import Firebase auth functions, removed FirebaseError
+import { signInWithEmailAndPassword } from 'firebase/auth'; // Import Firebase auth functions
 
 // Define the validation schema using Zod
 const formSchema = z.object({
@@ -38,11 +38,7 @@ export default function LoginPage() {
     } else {
         // Handle case where Firebase didn't initialize (e.g., missing config)
          console.error("Firebase Auth is not available. Check configuration.");
-         toast({
-             title: "Configuration Error",
-             description: "Firebase is not configured correctly. Please check environment variables.",
-             variant: "destructive",
-         });
+          // No need to toast here, message near button is better UX
     }
   }, []);
 
@@ -58,13 +54,15 @@ export default function LoginPage() {
 
   // onSubmit handler
   const onSubmit: SubmitHandler<LoginFormInput> = async (data) => {
+     // Explicitly check if auth is ready and available before proceeding
      if (!firebaseReady || !auth) {
         toast({
             title: "Login Unavailable",
-            description: "Firebase is not ready. Cannot process login.",
+            description: "Firebase is not configured correctly. Please check the setup.",
             variant: "destructive",
         });
-        return;
+        setIsSubmitting(false); // Ensure button is re-enabled
+        return; // Stop submission
     }
     setIsSubmitting(true);
     try {
@@ -100,8 +98,8 @@ export default function LoginPage() {
                 case 'auth/too-many-requests':
                     errorMessage = 'Access temporarily disabled due to too many failed login attempts. Please reset your password or try again later.';
                     break;
-                 case 'auth/api-key-not-valid': // Handle specific API key error
-                    errorMessage = 'Firebase API Key is invalid. Please check your configuration.';
+                 case 'auth/api-key-not-valid': // Handle specific API key error explicitly
+                    errorMessage = 'Invalid Firebase configuration (API Key). Please contact support or check setup.';
                     break;
                 default:
                     // Use the error message if available, otherwise keep the generic one
@@ -178,8 +176,9 @@ export default function LoginPage() {
                   </>
                 )}
               </Button>
+               {/* Show message if Firebase isn't ready */}
                {!firebaseReady && (
-                    <p className="text-xs text-destructive text-center mt-2">Firebase is not configured. Login is disabled.</p>
+                    <p className="text-xs text-destructive text-center mt-2">Firebase is not configured correctly. Login is disabled.</p>
                )}
             </form>
           </Form>
