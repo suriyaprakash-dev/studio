@@ -1,9 +1,10 @@
 
+
 "use client"
 
 import * as React from "react"
 import * as LabelPrimitive from "@radix-ui/react-label"
-import { Slot } from "@radix-ui/react-slot" // Keep Slot import for potential other uses if needed, though FormControl won't use it now
+// Removed Slot import as it's causing issues and we'll use React.cloneElement
 import {
   Controller,
   FormProvider,
@@ -157,7 +158,7 @@ const FormControl = React.forwardRef<
     });
   } catch (e) {
      // Catch the "React.Children.only" error if it still occurs (e.g., multiple children passed)
-     console.error("FormControl received multiple children. Expected a single child element.", children);
+     console.error("FormControl received multiple children or an invalid child. Expected a single valid React element.", children, e);
      // Render children directly as a fallback, though this breaks accessibility wiring
      return <>{children}</>;
   }
@@ -216,3 +217,4 @@ export {
   FormMessage,
   FormField,
 }
+
