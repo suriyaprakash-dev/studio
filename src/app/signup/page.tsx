@@ -4,82 +4,39 @@
 import * as React from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useForm, type SubmitHandler } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
+// Removed react-hook-form and zod imports
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+// Removed Form components
 import { useToast } from '@/hooks/use-toast';
-import { LoaderCircle, LogIn, UserPlus, AlertTriangle } from 'lucide-react';
-// Firebase imports removed
+import { LogIn, UserPlus } from 'lucide-react'; // Removed LoaderCircle, AlertTriangle
 
-// Define the validation schema using Zod
-const formSchema = z.object({
-  email: z.string().email({ message: 'Invalid email address' }),
-  password: z.string().min(8, { message: 'Password must be at least 8 characters' }),
-  confirmPassword: z.string(),
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "Passwords don't match",
-  path: ['confirmPassword'], // Set error path to confirmPassword field
-});
+// Removed form schema and type definition
 
-type SignUpFormInput = z.infer<typeof formSchema>;
-
-// Simulate a user object (replace with your actual user data structure if needed)
-interface SimulatedUser {
-    uid: string;
-    email: string;
-}
-
+// Removed simulated user interface
 
 export default function SignUpPage() {
-  const { toast } = useToast();
+  const { toast } = useToast(); // Keep toast if needed for other interactions, though not used here now
   const router = useRouter();
-  const [isSubmitting, setIsSubmitting] = React.useState(false);
-  // Removed firebaseReady state
+  // Removed isSubmitting state
 
-  // Removed useEffect for checking Firebase readiness
+  // Removed form instance
 
-  const form = useForm<SignUpFormInput>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      email: '',
-      password: '',
-      confirmPassword: '',
-    },
-    mode: 'onChange',
-  });
+  // Simplified handler to just navigate
+  const handleSignUpClick = () => {
+    console.log("Simulating signup and redirecting...");
+    // Optionally show a message before redirecting
+    // toast({
+    //     title: "Redirecting...",
+    //     description: "Taking you to the main page.",
+    // });
 
-  // onSubmit handler - Simulate signup
-  const onSubmit: SubmitHandler<SignUpFormInput> = async (data) => {
-    setIsSubmitting(true);
-    console.log("Simulating signup with:", data);
-
-    // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
-
-    // Simulate signup success (always succeeds for this example)
-     const simulatedUser: SimulatedUser = { uid: `simulated-${Date.now()}`, email: data.email };
-     console.log("Simulated Signup successful:", simulatedUser);
-
-     // Simulate storing user (Optional: you might not need to store on signup if login is required after)
-     // localStorage.setItem('simulatedUser', JSON.stringify(simulatedUser)); // Or just redirect
-
-    // Show success message
-    toast({
-        title: "Signup Successful (Simulated)",
-        description: "Welcome! Account created.",
-        variant: "default",
-    });
-
-    // Redirect to main page after successful signup
-    router.push('/'); // Redirect to the main page
-
-    // No need to set isSubmitting to false here as we are redirecting
+    // Directly redirect to the main page
+    router.push('/');
   };
+
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center p-6 bg-gradient-to-br from-background to-secondary/30">
@@ -88,70 +45,34 @@ export default function SignUpPage() {
           <CardTitle className="text-3xl font-bold text-primary flex items-center justify-center gap-2">
              <UserPlus size={28} /> Sign Up
           </CardTitle>
-          <CardDescription>Create a new PriceLens account.</CardDescription>
+          <CardDescription>Create a new PriceLens account (Dummy).</CardDescription>
         </CardHeader>
         <CardContent>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
-              <FormField
-                control={form.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Email Address</FormLabel>
-                    <FormControl>
-                      {/* Ensure value is controlled, defaulting to '' */}
-                      <Input type="email" placeholder="you@example.com" {...field} value={field.value ?? ''} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="password"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Password</FormLabel>
-                    <FormControl>
-                       {/* Ensure value is controlled, defaulting to '' */}
-                      <Input type="password" placeholder="•••••••• (min. 8 characters)" {...field} value={field.value ?? ''}/>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="confirmPassword"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Confirm Password</FormLabel>
-                    <FormControl>
-                       {/* Ensure value is controlled, defaulting to '' */}
-                      <Input type="password" placeholder="••••••••" {...field} value={field.value ?? ''} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              {/* Removed disabled={!firebaseReady} */}
-              <Button type="submit" disabled={isSubmitting} className="w-full text-lg py-3 rounded-lg transition-transform transform hover:scale-105 mt-4">
-                {isSubmitting ? (
-                  <>
-                    <LoaderCircle className="animate-spin mr-2" size={20} />
-                    Creating Account...
-                  </>
-                ) : (
-                  <>
-                    <UserPlus size={20} className="mr-2" />
-                    Sign Up
-                  </>
-                )}
+          {/* Removed Form wrapper */}
+          {/* Simplified form structure - inputs are present but not functional */}
+          <div className="space-y-5">
+              <div>
+                <Label htmlFor="email">Email Address</Label>
+                <Input id="email" type="email" placeholder="you@example.com" disabled />
+                {/* Removed FormMessage */}
+              </div>
+              <div>
+                <Label htmlFor="password">Password</Label>
+                <Input id="password" type="password" placeholder="•••••••• (min. 8 characters)" disabled />
+                {/* Removed FormMessage */}
+              </div>
+              <div>
+                <Label htmlFor="confirmPassword">Confirm Password</Label>
+                <Input id="confirmPassword" type="password" placeholder="••••••••" disabled />
+                {/* Removed FormMessage */}
+              </div>
+              {/* Changed Button type to "button" and added onClick handler */}
+              <Button type="button" onClick={handleSignUpClick} className="w-full text-lg py-3 rounded-lg transition-transform transform hover:scale-105 mt-4">
+                  {/* Simplified button text */}
+                  <UserPlus size={20} className="mr-2" />
+                  Sign Up & Go to Main Page
               </Button>
-               {/* Removed Firebase readiness message */}
-            </form>
-          </Form>
+           </div>
         </CardContent>
          <CardFooter className="flex justify-center items-center pt-4 pb-6">
             <p className="text-sm text-muted-foreground">
