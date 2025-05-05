@@ -5,7 +5,7 @@ import * as React from 'react';
 import type { ElasticityResultData, ElasticityInput } from '@/app/actions';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { TrendingUp, TrendingDown, Minus, BarChartBig, LoaderCircle, AlertCircle, PieChart as PieChartIcon, Scale } from 'lucide-react'; // Added Scale for Quantity
+import { TrendingUp, TrendingDown, Minus, BarChartBig, LoaderCircle, AlertCircle, PieChart as PieChartIcon, Scale, DollarSign } from 'lucide-react'; // Added Scale and DollarSign
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import {
   ChartTooltip,
@@ -215,3 +215,4 @@ export function ElasticityResult({ result, isLoading, inputData }: ElasticityRes
     </Card>
   );
 }
+
