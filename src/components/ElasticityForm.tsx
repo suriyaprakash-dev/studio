@@ -108,7 +108,6 @@ export function ElasticityForm({ onCalculationStart, onCalculationEnd }: Elastic
 
 
   return (
-    // Removed card-hover-effect, added bg-card
     <Card className="w-full shadow-lg rounded-xl border-border/60 bg-card">
         <CardHeader>
             <CardTitle className="flex items-center gap-2 text-2xl font-semibold">
@@ -121,14 +120,14 @@ export function ElasticityForm({ onCalculationStart, onCalculationEnd }: Elastic
              <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                    <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                    {/* Initial Point */}
-                    <Card className="p-5 bg-secondary/40 rounded-lg border border-border/50">
-                      <h3 className="text-lg font-medium mb-4 text-foreground">Initial Point (Point 1)</h3>
+                    {/* Initial Point Group */}
+                    <div className="space-y-4 p-5 bg-secondary/30 rounded-lg border border-border/40">
+                      <h3 className="text-lg font-medium text-foreground -mb-1">Initial Point (Point 1)</h3>
                        <FormField
                         control={form.control}
                         name="initialPrice"
                         render={({ field }) => (
-                          <FormItem className="mb-4">
+                          <FormItem>
                             <FormLabel className="flex items-center gap-1.5 text-sm"><DollarSign size={16} /> Initial Price</FormLabel>
                             <FormControl>
                               {/* Ensure value is controlled, passing '' for undefined */}
@@ -151,16 +150,16 @@ export function ElasticityForm({ onCalculationStart, onCalculationEnd }: Elastic
                           </FormItem>
                         )}
                       />
-                    </Card>
+                    </div>
 
-                    {/* Final Point */}
-                     <Card className="p-5 bg-secondary/40 rounded-lg border border-border/50">
-                      <h3 className="text-lg font-medium mb-4 text-foreground">Final Point (Point 2)</h3>
+                    {/* Final Point Group */}
+                     <div className="space-y-4 p-5 bg-secondary/30 rounded-lg border border-border/40">
+                      <h3 className="text-lg font-medium text-foreground -mb-1">Final Point (Point 2)</h3>
                       <FormField
                         control={form.control}
                         name="finalPrice"
                         render={({ field }) => (
-                          <FormItem className="mb-4">
+                          <FormItem>
                              <FormLabel className="flex items-center gap-1.5 text-sm"><DollarSign size={16} /> Final Price</FormLabel>
                             <FormControl>
                               <Input type="number" placeholder="e.g., 12.00" {...field} value={field.value ?? ''} step="any" />
@@ -182,7 +181,7 @@ export function ElasticityForm({ onCalculationStart, onCalculationEnd }: Elastic
                           </FormItem>
                         )}
                       />
-                     </Card>
+                     </div>
                   </div>
 
                   <Button type="submit" disabled={isSubmitting} className="w-full mt-8 text-lg py-3 rounded-lg transition-transform transform hover:scale-105">
