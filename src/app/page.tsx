@@ -7,7 +7,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { ElasticityForm } from '@/components/ElasticityForm';
 import { ElasticityResult } from '@/components/ElasticityResult';
-import type { ElasticityResultData } from '@/app/actions';
+import type { ElasticityResultData, ElasticityInput } from '@/app/actions'; // Import ElasticityInput
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Target, LogIn, UserPlus, LogOut, LoaderCircle, AlertTriangle, BookOpen, Settings } from 'lucide-react'; // Added Settings icon
@@ -22,6 +22,7 @@ interface SimulatedUser {
 
 export default function Home() {
   const [result, setResult] = React.useState<ElasticityResultData | null>(null);
+  const [lastInput, setLastInput] = React.useState<ElasticityInput | null>(null); // Store last valid input for chart
   const [isLoading, setIsLoading] = React.useState(false);
   const [user, setUser] = React.useState<SimulatedUser | null>(null); // Store simulated user object
   const [authLoading, setAuthLoading] = React.useState(true); // Keep loading state for initial check
@@ -52,6 +53,7 @@ export default function Home() {
                 setUser(updatedUser);
                  if (!updatedUser) {
                     setResult(null);
+                    setLastInput(null); // Reset input on logout
                  }
             } catch (error) {
                 console.error("Error parsing updated user from storage event:", error);
@@ -67,12 +69,21 @@ export default function Home() {
   const handleCalculationStart = () => {
     setIsLoading(true);
     setResult(null);
+    setLastInput(null); // Clear previous input on new calculation
   };
 
-  const handleCalculationEnd = (calculationResult: ElasticityResultData) => {
+  // Update to receive both result and input data
+  const handleCalculationEnd = (calculationResult: ElasticityResultData, inputData?: ElasticityInput) => {
     setResult(calculationResult);
+    // Only store input data if calculation was successful (no error)
+    if (!calculationResult.error && inputData) {
+        setLastInput(inputData);
+    } else {
+        setLastInput(null); // Clear input if there was an error
+    }
     setIsLoading(false);
   };
+
 
   const handleLogout = async () => {
      console.log("Simulating logout...");
@@ -80,6 +91,7 @@ export default function Home() {
         localStorage.removeItem('simulatedUser');
         setUser(null);
         setResult(null);
+        setLastInput(null); // Clear input on logout
         toast({
             title: "Logged Out (Simulated)",
             description: "You have been successfully logged out.",
@@ -182,7 +194,7 @@ export default function Home() {
                         />
                     </div>
                     <div className="lg:col-span-2 lg:sticky lg:top-24"> {/* Make results sticky, adjust top offset */}
-                        <ElasticityResult result={result} isLoading={isLoading} />
+                        <ElasticityResult result={result} isLoading={isLoading} inputData={lastInput} /> {/* Pass inputData */}
                     </div>
                 </section>
             ) : (

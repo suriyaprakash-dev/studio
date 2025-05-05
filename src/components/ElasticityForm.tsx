@@ -50,7 +50,8 @@ const formSchema = z.object({
 
 interface ElasticityFormProps {
   onCalculationStart: () => void;
-  onCalculationEnd: (result: ElasticityResultData) => void;
+  // Update the callback type to accept input data
+  onCalculationEnd: (result: ElasticityResultData, inputData?: ElasticityInput) => void;
 }
 
 export function ElasticityForm({ onCalculationStart, onCalculationEnd }: ElasticityFormProps) {
@@ -78,7 +79,8 @@ export function ElasticityForm({ onCalculationStart, onCalculationEnd }: Elastic
       console.log("Submitting data:", data); // Log data before sending
       const result = await calculateElasticity(data);
       console.log("Received result:", result); // Log received result
-      onCalculationEnd(result); // Send result to parent component
+      // Pass both the result and the original input data
+      onCalculationEnd(result, data);
         if (result.error) {
          toast({
            title: "Calculation Error",
@@ -95,6 +97,7 @@ export function ElasticityForm({ onCalculationStart, onCalculationEnd }: Elastic
     } catch (error) {
       console.error("Calculation failed:", error);
       const errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred.';
+       // Pass only the error result, input data is irrelevant here
        onCalculationEnd({ elasticity: NaN, classification: 'Invalid Input', error: errorMessage });
       toast({
         title: "Calculation Failed",

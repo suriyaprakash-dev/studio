@@ -11,9 +11,12 @@ const ElasticityInputSchema = z.object({
 
 export type ElasticityInput = z.infer<typeof ElasticityInputSchema>;
 
+// Add percentage changes to the result data
 export type ElasticityResultData = {
   elasticity: number;
   classification: 'Elastic' | 'Inelastic' | 'Unit Elastic' | 'Perfectly Inelastic' | 'Perfectly Elastic' | 'Invalid Input';
+  percentageChangeQ?: number; // Absolute percentage change in quantity
+  percentageChangeP?: number; // Absolute percentage change in price
   error?: string;
 };
 
@@ -43,24 +46,33 @@ export async function calculateElasticity(
   }
   if (deltaP === 0) {
      // Price constant, quantity changed -> Perfectly Elastic
-    return { elasticity: Infinity, classification: 'Perfectly Elastic' };
+     // Percentage changes: P=0, Q is relative change
+     const percentageChangeQ = avgQ !== 0 ? Math.abs(deltaQ / avgQ) : Infinity;
+    return { elasticity: Infinity, classification: 'Perfectly Elastic', percentageChangeQ: percentageChangeQ, percentageChangeP: 0 };
   }
    if (deltaQ === 0) {
     // Quantity constant, price changed -> Perfectly Inelastic
-    return { elasticity: 0, classification: 'Perfectly Inelastic' };
+    // Percentage changes: Q=0, P is relative change
+    const percentageChangeP = avgP !== 0 ? Math.abs(deltaP / avgP) : Infinity;
+    return { elasticity: 0, classification: 'Perfectly Inelastic', percentageChangeQ: 0, percentageChangeP: percentageChangeP };
   }
 
-  // Handle division by zero for average quantity or price (shouldn't happen with positive inputs, but good practice)
+  // Handle division by zero for average quantity or price (shouldn't happen with positive inputs validation, but good practice)
   if (avgQ === 0 || avgP === 0) {
       return { elasticity: NaN, classification: 'Invalid Input', error: 'Average price or quantity cannot be zero.' };
   }
 
 
-  const percentageChangeQ = deltaQ / avgQ;
-  const percentageChangeP = deltaP / avgP;
+  const percentageChangeQRaw = deltaQ / avgQ;
+  const percentageChangePRaw = deltaP / avgP;
 
-  const elasticity = percentageChangeQ / percentageChangeP;
+  const elasticity = percentageChangeQRaw / percentageChangePRaw;
   const absElasticity = Math.abs(elasticity);
+
+  // Calculate absolute percentage changes for the chart
+  const absPercentageChangeQ = Math.abs(percentageChangeQRaw);
+  const absPercentageChangeP = Math.abs(percentageChangePRaw);
+
 
   let classification: ElasticityResultData['classification'];
   if (absElasticity > 1) {
@@ -71,11 +83,19 @@ export async function calculateElasticity(
     classification = 'Unit Elastic';
   } else if (absElasticity === 0) {
       classification = 'Perfectly Inelastic';
-  } else {
-    // This case might occur if elasticity is exactly Infinity or -Infinity handled above, or NaN
+  } else if (!isFinite(absElasticity)) {
+       classification = 'Perfectly Elastic'; // Handle Infinity case from deltaP=0
+  }
+   else {
+    // This case might occur if elasticity is NaN for other reasons
     classification = 'Invalid Input'; // Default or error case
   }
 
 
-  return { elasticity, classification };
+  return {
+      elasticity,
+      classification,
+      percentageChangeQ: absPercentageChangeQ,
+      percentageChangeP: absPercentageChangeP
+    };
 }
