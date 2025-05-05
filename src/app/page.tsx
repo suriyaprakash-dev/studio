@@ -250,9 +250,6 @@ export default function Home() {
             <div className="container max-w-6xl mx-auto flex flex-col sm:flex-row justify-between items-center text-sm text-muted-foreground gap-4"> {/* Added gap */}
                 <p>&copy; {new Date().getFullYear()} PriceLens. All rights reserved.</p>
                 <nav className="flex gap-6"> {/* Increased gap */}
-                    <Link href="/contact" className="hover:text-primary hover:underline underline-offset-4 transition-colors"> {/* Added transition */}
-                        Contact Us
-                    </Link>
                     {/* Add other footer links like Privacy Policy, Terms of Service if needed */}
                     <Link href="#" className="hover:text-primary hover:underline underline-offset-4 transition-colors"> {/* Placeholder */}
                         Privacy Policy
@@ -266,3 +263,4 @@ export default function Home() {
     </div>
   );
 }
+
