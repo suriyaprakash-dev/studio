@@ -2,6 +2,7 @@
 
 import * as React from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation'; // Import useRouter
 import { useForm, type SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -11,7 +12,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
-import { LoaderCircle, LogIn, UserPlus } from 'lucide-react'; // Changed icon import
+import { LoaderCircle, LogIn, UserPlus } from 'lucide-react';
 
 // Define the validation schema using Zod
 const formSchema = z.object({
@@ -27,6 +28,7 @@ type SignUpFormInput = z.infer<typeof formSchema>;
 
 export default function SignUpPage() {
   const { toast } = useToast();
+  const router = useRouter(); // Initialize useRouter
   const [isSubmitting, setIsSubmitting] = React.useState(false);
 
   const form = useForm<SignUpFormInput>({
@@ -39,7 +41,7 @@ export default function SignUpPage() {
     mode: 'onChange', // Validate on change for better UX
   });
 
-  // Placeholder onSubmit handler
+  // onSubmit handler
   const onSubmit: SubmitHandler<SignUpFormInput> = async (data) => {
     setIsSubmitting(true);
     console.log("Signup data:", data); // Log signup data
@@ -50,15 +52,15 @@ export default function SignUpPage() {
     // In a real app, you'd call your backend API here to create the user
     // For now, just show a success message
     toast({
-      title: "Signup Successful (Simulated)",
-      description: "Account created. You can now log in.",
+      title: "Signup Successful",
+      description: "Account created. Please log in.",
       variant: "default",
     });
 
-    // Optionally redirect to login page or dashboard
-    // form.reset(); // Reset form after successful submission
+    // Redirect to login page after successful signup
+    router.push('/login');
 
-    setIsSubmitting(false);
+    // No need to reset form or set submitting state due to navigation
   };
 
   return (
