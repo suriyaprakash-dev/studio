@@ -3,7 +3,7 @@
 
 import * as React from "react"
 import * as LabelPrimitive from "@radix-ui/react-label"
-import { Slot } from "@radix-ui/react-slot"
+import { Slot } from "@radix-ui/react-slot" // Ensure Slot is imported
 import {
   Controller,
   FormProvider,
@@ -52,6 +52,11 @@ const useFormField = () => {
   if (!fieldContext) {
     throw new Error("useFormField should be used within <FormField>")
   }
+
+  if (!itemContext) {
+    throw new Error("useFormField should be used within <FormItem>")
+  }
+
 
   const { id } = itemContext
 
@@ -104,17 +109,17 @@ const FormLabel = React.forwardRef<
 })
 FormLabel.displayName = "FormLabel"
 
-
-// Updated FormControl: Explicitly pass children to Slot
+// Updated FormControl: Use Slot correctly. It implicitly passes props to its single child.
+// Children are passed down via {...props} spread onto Slot.
 const FormControl = React.forwardRef<
   React.ElementRef<typeof Slot>,
   React.ComponentPropsWithoutRef<typeof Slot>
->(({ children, ...props }, ref) => { // Added children back to props
-  const { error, formItemId, formDescriptionId, formMessageId } = useFormField();
+>(({ ...props }, ref) => {
+  const { error, formItemId, formDescriptionId, formMessageId } = useFormField()
 
   return (
-    <Slot
-      ref={ref} // Pass the ref to Slot
+    <Slot // Slot will automatically pass props down to its single child
+      ref={ref}
       id={formItemId}
       aria-describedby={
         !error
@@ -122,13 +127,11 @@ const FormControl = React.forwardRef<
           : `${formDescriptionId} ${formMessageId}`
       }
       aria-invalid={!!error}
-      {...props}
-    >
-      {children} {/* Explicitly render children */}
-    </Slot>
-  );
-});
-FormControl.displayName = "FormControl";
+      {...props} // Spread the rest of the props (including children implicitly)
+    />
+  )
+})
+FormControl.displayName = "FormControl"
 
 
 const FormDescription = React.forwardRef<
