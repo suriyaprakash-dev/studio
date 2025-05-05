@@ -3,7 +3,7 @@
 
 import * as React from "react"
 import * as LabelPrimitive from "@radix-ui/react-label"
-import { Slot } from "@radix-ui/react-slot" // Ensure Slot is imported
+import { Slot } from "@radix-ui/react-slot" // Keep Slot import for potential other uses if needed, though FormControl won't use it now
 import {
   Controller,
   FormProvider,
@@ -55,16 +55,25 @@ const useFormField = () => {
 
   // Check if itemContext exists before accessing its id
   const id = itemContext?.id;
-  if (!id) {
-    // This might happen if useFormField is used outside FormItem.
-    // Depending on the desired behavior, you might throw an error or return default values.
-    // For now, let's throw an error as it was likely intended to be used within FormItem.
-    throw new Error("useFormField should be used within <FormItem>");
+  if (!id && Object.keys(itemContext).length === 0) { // Check if context is empty object
+    // Allow usage outside FormItem for flexibility, but provide default IDs or handle appropriately
+    // console.warn("useFormField is used outside <FormItem>. Accessibility features might be limited.");
+    // For simplicity, let's return default IDs based on the field name if outside FormItem
+    const defaultId = fieldContext.name;
+     return {
+      id: defaultId,
+      name: fieldContext.name,
+      formItemId: `${defaultId}-form-item`,
+      formDescriptionId: `${defaultId}-form-item-description`,
+      formMessageId: `${defaultId}-form-item-message`,
+      ...fieldState,
+    }
+    // Alternatively, throw: throw new Error("useFormField should be used within <FormItem>");
   }
 
 
   return {
-    id,
+    id: id!, // Use non-null assertion if you ensure it's always within FormItem or handle null case
     name: fieldContext.name,
     formItemId: `${id}-form-item`,
     formDescriptionId: `${id}-form-item-description`,
@@ -77,9 +86,9 @@ type FormItemContextValue = {
   id: string
 }
 
-const FormItemContext = React.createContext<FormItemContextValue>(
-  {} as FormItemContextValue
-)
+// Provide a default value for the context
+const FormItemContext = React.createContext<FormItemContextValue>({} as FormItemContextValue)
+
 
 const FormItem = React.forwardRef<
   HTMLDivElement,
@@ -113,30 +122,47 @@ const FormLabel = React.forwardRef<
 FormLabel.displayName = "FormLabel"
 
 
-// Updated FormControl to explicitly pass children to Slot
+// Refactored FormControl using React.cloneElement instead of Slot
 const FormControl = React.forwardRef<
-  React.ElementRef<typeof Slot>,
-  React.ComponentPropsWithoutRef<typeof Slot>
->(({ children, ...props }, ref) => { // Explicitly accept children
-  const { error, formItemId, formDescriptionId, formMessageId } = useFormField()
+  HTMLElement, // Use a more general type or the specific element type if known
+  React.HTMLAttributes<HTMLElement> // Adjust props type accordingly
+>(({ children, className, ...props }, ref) => {
+  const { error, formItemId, formDescriptionId, formMessageId } = useFormField();
 
-  return (
-    <Slot // Slot will automatically pass props down to its single child
-      ref={ref}
-      id={formItemId}
-      aria-describedby={
-        !error
-          ? `${formDescriptionId}`
-          : `${formDescriptionId} ${formMessageId}`
-      }
-      aria-invalid={!!error}
-      {...props} // Spread the rest of the props
-    >
-       {children} {/* Pass children explicitly to Slot */}
-    </Slot>
-  )
-})
-FormControl.displayName = "FormControl"
+  try {
+    // Ensure there is only one child
+    const child = React.Children.only(children);
+
+    // Check if the child is a valid React element before cloning
+    if (!React.isValidElement(child)) {
+      // This case should ideally not happen if used correctly, but good to handle
+      console.error("FormControl expects a single valid React element child.");
+      return <>{children}</>;
+    }
+
+    // Clone the child and add the necessary props
+    // The ref is passed down; the child component (e.g., Input) must use React.forwardRef
+    return React.cloneElement(child as React.ReactElement, {
+      ref: ref, // Pass the ref down
+      id: formItemId,
+      'aria-describedby': !error
+        ? formDescriptionId // Use the ID directly
+        : `${formDescriptionId} ${formMessageId}`, // Combine IDs if error exists
+      'aria-invalid': !!error,
+      // Merge className, ensuring child's className and FormControl's className are combined
+      className: cn(child.props.className, className),
+      ...props, // Spread other props passed to FormControl (careful not to overwrite child props unintentionally)
+      // Note: React.cloneElement automatically preserves existing props on the child,
+      // so explicitly spreading child.props is usually not needed unless overriding specific ones.
+    });
+  } catch (e) {
+     // Catch the "React.Children.only" error if it still occurs (e.g., multiple children passed)
+     console.error("FormControl received multiple children. Expected a single child element.", children);
+     // Render children directly as a fallback, though this breaks accessibility wiring
+     return <>{children}</>;
+  }
+});
+FormControl.displayName = "FormControl";
 
 
 const FormDescription = React.forwardRef<
