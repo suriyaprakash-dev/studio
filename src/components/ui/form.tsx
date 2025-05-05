@@ -104,30 +104,25 @@ const FormLabel = React.forwardRef<
 })
 FormLabel.displayName = "FormLabel"
 
-// Corrected FormControl to explicitly handle children for Slot
+// Reverted FormControl to standard ShadCN structure
 const FormControl = React.forwardRef<
   React.ElementRef<typeof Slot>,
-  // Ensure children prop is explicitly typed and handled, Omit children from spread props
-  Omit<React.ComponentPropsWithoutRef<typeof Slot>, 'children'> & { children: React.ReactNode }
->(({ children, ...props }, ref) => { // Destructure children explicitly
+  React.ComponentPropsWithoutRef<typeof Slot> // Use standard props type
+>(({ ...props }, ref) => { // Rely on ...props to contain children
   const { error, formItemId, formDescriptionId, formMessageId } = useFormField()
 
   return (
-    <Slot // Use Slot component
+    <Slot // Slot implicitly expects children from where FormControl is used
       ref={ref}
       id={formItemId}
       aria-describedby={
         !error
           ? `${formDescriptionId}`
-          // Ensure description ID is included even if there's an error
           : `${formDescriptionId} ${formMessageId}`
       }
       aria-invalid={!!error}
-      {...props} // Spread any other props (excluding children)
-    >
-      {/* Render the single children passed from Controller's render prop inside Slot */}
-      {children}
-    </Slot>
+      {...props} // {...props} includes children passed to FormControl
+    />
   )
 })
 FormControl.displayName = "FormControl"
