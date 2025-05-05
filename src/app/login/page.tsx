@@ -14,8 +14,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
 import { LoaderCircle, LogIn, UserPlus } from 'lucide-react';
-import { auth } from '@/lib/firebase/client'; // Import Firebase auth instance
-import { signInWithEmailAndPassword } from 'firebase/auth'; // Import Firebase auth functions
+// Firebase imports removed
 
 // Define the validation schema using Zod
 const formSchema = z.object({
@@ -25,23 +24,19 @@ const formSchema = z.object({
 
 type LoginFormInput = z.infer<typeof formSchema>;
 
+// Simulate a user object (replace with your actual user data structure if needed)
+interface SimulatedUser {
+    uid: string;
+    email: string;
+}
+
 export default function LoginPage() {
   const { toast } = useToast();
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
-  const [firebaseReady, setFirebaseReady] = React.useState(false);
+  // Removed firebaseReady state
 
-   React.useEffect(() => {
-    // Check if auth object is available (Firebase initialized)
-    if (auth) {
-      setFirebaseReady(true);
-    } else {
-        // Handle case where Firebase didn't initialize (e.g., missing config)
-         console.error("Firebase Auth is not available. Check configuration.");
-          // No need to toast here, message near button is better UX
-    }
-  }, []);
-
+  // Removed useEffect for checking Firebase readiness
 
   const form = useForm<LoginFormInput>({
     resolver: zodResolver(formSchema),
@@ -52,71 +47,37 @@ export default function LoginPage() {
      mode: 'onChange',
   });
 
-  // onSubmit handler
+  // onSubmit handler - Simulate login
   const onSubmit: SubmitHandler<LoginFormInput> = async (data) => {
-     // Explicitly check if auth is ready and available before proceeding
-     if (!firebaseReady || !auth) {
-        toast({
-            title: "Login Unavailable",
-            description: "Firebase is not configured correctly. Please check the setup.",
-            variant: "destructive",
-        });
-        setIsSubmitting(false); // Ensure button is re-enabled
-        return; // Stop submission
-    }
     setIsSubmitting(true);
+    console.log("Simulating login with:", data);
+
+    // Simulate API call delay
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    // Simulate login success (always succeeds for this example)
+    const simulatedUser: SimulatedUser = { uid: 'simulated-user-123', email: data.email };
+    console.log("Simulated Login successful:", simulatedUser);
+
+    // Store simulated user state (using localStorage for basic persistence)
     try {
-        // Use Firebase to sign in the user
-        const userCredential = await signInWithEmailAndPassword(auth, data.email, data.password);
-        const user = userCredential.user;
-        console.log("Firebase Login successful:", user);
-
-        // Show success message
-        toast({
-            title: "Login Successful",
-            description: "Welcome back!",
-            variant: "default",
-        });
-
-        // Redirect to dashboard/home page
-        router.push('/'); // Redirect to the main page
-
-    } catch (error: any) { // Catch as 'any' or 'unknown' then check properties
-        console.error("Firebase Login Error:", error);
-        let errorMessage = "An unexpected error occurred during login.";
-
-        // Check if the error has a 'code' property, typical for Firebase errors
-        if (error && typeof error === 'object' && 'code' in error) {
-            switch (error.code) {
-                case 'auth/user-not-found':
-                case 'auth/invalid-credential': // Covers wrong password and email not found in newer SDK versions
-                    errorMessage = 'Invalid email or password.';
-                    break;
-                case 'auth/invalid-email':
-                    errorMessage = 'The email address is not valid.';
-                    break;
-                case 'auth/too-many-requests':
-                    errorMessage = 'Access temporarily disabled due to too many failed login attempts. Please reset your password or try again later.';
-                    break;
-                 case 'auth/api-key-not-valid': // Handle specific API key error explicitly
-                    errorMessage = 'Invalid Firebase configuration (API Key). Please contact support or check setup.';
-                    break;
-                default:
-                    // Use the error message if available, otherwise keep the generic one
-                    errorMessage = error.message ? `Login failed: ${error.message}` : errorMessage;
-            }
-        } else if (error instanceof Error) {
-            errorMessage = error.message;
-        }
-
-        toast({
-            title: "Login Failed",
-            description: errorMessage,
-            variant: "destructive",
-        });
-        setIsSubmitting(false); // Keep form active on error
+        localStorage.setItem('simulatedUser', JSON.stringify(simulatedUser));
+    } catch (e) {
+        console.error("Could not save simulated user to localStorage:", e);
+        // Handle potential storage errors (e.g., private browsing mode)
     }
-    // No need to set submitting false or reset form if redirecting on success
+
+    // Show success message
+    toast({
+        title: "Login Successful (Simulated)",
+        description: "Welcome back!",
+        variant: "default",
+    });
+
+    // Redirect to dashboard/home page
+    router.push('/'); // Redirect to the main page
+
+    // No need to set isSubmitting to false here as we are redirecting
   };
 
   return (
@@ -138,7 +99,8 @@ export default function LoginPage() {
                   <FormItem>
                     <FormLabel>Email Address</FormLabel>
                     <FormControl>
-                      <Input type="email" placeholder="you@example.com" {...field} />
+                      {/* Ensure value is controlled, defaulting to '' */}
+                      <Input type="email" placeholder="you@example.com" {...field} value={field.value ?? ''} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -151,7 +113,8 @@ export default function LoginPage() {
                   <FormItem>
                     <FormLabel>Password</FormLabel>
                     <FormControl>
-                      <Input type="password" placeholder="••••••••" {...field} />
+                      {/* Ensure value is controlled, defaulting to '' */}
+                      <Input type="password" placeholder="••••••••" {...field} value={field.value ?? ''} />
                     </FormControl>
                      <FormMessage />
                      <div className="flex justify-end pt-1">
@@ -163,7 +126,8 @@ export default function LoginPage() {
                   </FormItem>
                 )}
               />
-              <Button type="submit" disabled={isSubmitting || !firebaseReady} className="w-full text-lg py-3 rounded-lg transition-transform transform hover:scale-105 mt-4">
+              {/* Removed disabled={!firebaseReady} */}
+              <Button type="submit" disabled={isSubmitting} className="w-full text-lg py-3 rounded-lg transition-transform transform hover:scale-105 mt-4">
                 {isSubmitting ? (
                   <>
                     <LoaderCircle className="animate-spin mr-2" size={20} />
@@ -176,10 +140,7 @@ export default function LoginPage() {
                   </>
                 )}
               </Button>
-               {/* Show message if Firebase isn't ready */}
-               {!firebaseReady && (
-                    <p className="text-xs text-destructive text-center mt-2">Firebase is not configured correctly. Login is disabled.</p>
-               )}
+               {/* Removed Firebase readiness message */}
             </form>
           </Form>
         </CardContent>

@@ -13,9 +13,8 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
-import { LoaderCircle, LogIn, UserPlus, AlertTriangle } from 'lucide-react'; // Added AlertTriangle
-import { auth } from '@/lib/firebase/client'; // Import Firebase auth instance
-import { createUserWithEmailAndPassword } from 'firebase/auth'; // Import Firebase auth functions
+import { LoaderCircle, LogIn, UserPlus, AlertTriangle } from 'lucide-react';
+// Firebase imports removed
 
 // Define the validation schema using Zod
 const formSchema = z.object({
@@ -29,23 +28,20 @@ const formSchema = z.object({
 
 type SignUpFormInput = z.infer<typeof formSchema>;
 
+// Simulate a user object (replace with your actual user data structure if needed)
+interface SimulatedUser {
+    uid: string;
+    email: string;
+}
+
+
 export default function SignUpPage() {
   const { toast } = useToast();
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
-  const [firebaseReady, setFirebaseReady] = React.useState(false);
+  // Removed firebaseReady state
 
-   React.useEffect(() => {
-    // Check if auth object is available (Firebase initialized)
-    if (auth) {
-      setFirebaseReady(true);
-    } else {
-      // Handle case where Firebase didn't initialize (e.g., missing config)
-      console.error("Firebase Auth is not available. Check configuration.");
-       // No need to toast here, message shown near button is better UX
-    }
-  }, []);
-
+  // Removed useEffect for checking Firebase readiness
 
   const form = useForm<SignUpFormInput>({
     resolver: zodResolver(formSchema),
@@ -57,71 +53,32 @@ export default function SignUpPage() {
     mode: 'onChange',
   });
 
-  // onSubmit handler
+  // onSubmit handler - Simulate signup
   const onSubmit: SubmitHandler<SignUpFormInput> = async (data) => {
-     // Explicitly check if auth is ready and available before proceeding
-     if (!firebaseReady || !auth) {
-        toast({
-            title: "Signup Unavailable",
-            description: "Firebase is not configured correctly. Please check the setup.",
-            variant: "destructive",
-        });
-        setIsSubmitting(false); // Ensure button is re-enabled
-        return; // Stop submission
-    }
     setIsSubmitting(true);
-    try {
-      // Use Firebase to create the user
-      const userCredential = await createUserWithEmailAndPassword(auth, data.email, data.password);
-      const user = userCredential.user;
-      console.log("Firebase Signup successful:", user);
+    console.log("Simulating signup with:", data);
 
-      // Show success message
-      toast({
-        title: "Signup Successful",
+    // Simulate API call delay
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    // Simulate signup success (always succeeds for this example)
+     const simulatedUser: SimulatedUser = { uid: `simulated-${Date.now()}`, email: data.email };
+     console.log("Simulated Signup successful:", simulatedUser);
+
+     // Simulate storing user (Optional: you might not need to store on signup if login is required after)
+     // localStorage.setItem('simulatedUser', JSON.stringify(simulatedUser)); // Or just redirect
+
+    // Show success message
+    toast({
+        title: "Signup Successful (Simulated)",
         description: "Welcome! Account created.",
         variant: "default",
-      });
+    });
 
-      // Redirect to main page after successful signup
-      router.push('/'); // Changed from '/login' to '/'
+    // Redirect to main page after successful signup
+    router.push('/'); // Redirect to the main page
 
-    } catch (error: any) { // Catch as 'any' or 'unknown' then check properties
-      console.error("Firebase Signup Error:", error);
-      let errorMessage = "An unexpected error occurred during signup.";
-
-      // Check if the error has a 'code' property, typical for Firebase errors
-      if (error && typeof error === 'object' && 'code' in error) {
-          switch (error.code) {
-              case 'auth/email-already-in-use':
-                  errorMessage = 'This email address is already in use.';
-                  break;
-              case 'auth/invalid-email':
-                  errorMessage = 'The email address is not valid.';
-                  break;
-              case 'auth/weak-password':
-                  errorMessage = 'The password is too weak.';
-                  break;
-              case 'auth/api-key-not-valid.-please-pass-a-valid-api-key.': // Explicitly handle the specific API key error string
-              case 'auth/api-key-not-valid': // Also keep the general code check
-                  errorMessage = 'Invalid Firebase configuration (API Key). Please check setup or contact support.';
-                   break;
-              default:
-                  // Use the error message if available, otherwise keep the generic one
-                  errorMessage = error.message ? `Signup failed: ${error.message}` : errorMessage;
-          }
-      } else if (error instanceof Error) {
-         errorMessage = error.message;
-      }
-
-      toast({
-        title: "Signup Failed",
-        description: errorMessage,
-        variant: "destructive",
-      });
-       setIsSubmitting(false); // Keep form active on error
-    }
-    // No need to set submitting false or reset form if redirecting on success
+    // No need to set isSubmitting to false here as we are redirecting
   };
 
   return (
@@ -143,7 +100,8 @@ export default function SignUpPage() {
                   <FormItem>
                     <FormLabel>Email Address</FormLabel>
                     <FormControl>
-                      <Input type="email" placeholder="you@example.com" {...field} />
+                      {/* Ensure value is controlled, defaulting to '' */}
+                      <Input type="email" placeholder="you@example.com" {...field} value={field.value ?? ''} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -156,7 +114,8 @@ export default function SignUpPage() {
                   <FormItem>
                     <FormLabel>Password</FormLabel>
                     <FormControl>
-                      <Input type="password" placeholder="•••••••• (min. 8 characters)" {...field} />
+                       {/* Ensure value is controlled, defaulting to '' */}
+                      <Input type="password" placeholder="•••••••• (min. 8 characters)" {...field} value={field.value ?? ''}/>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -169,13 +128,15 @@ export default function SignUpPage() {
                   <FormItem>
                     <FormLabel>Confirm Password</FormLabel>
                     <FormControl>
-                      <Input type="password" placeholder="••••••••" {...field} />
+                       {/* Ensure value is controlled, defaulting to '' */}
+                      <Input type="password" placeholder="••••••••" {...field} value={field.value ?? ''} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-              <Button type="submit" disabled={isSubmitting || !firebaseReady} className="w-full text-lg py-3 rounded-lg transition-transform transform hover:scale-105 mt-4">
+              {/* Removed disabled={!firebaseReady} */}
+              <Button type="submit" disabled={isSubmitting} className="w-full text-lg py-3 rounded-lg transition-transform transform hover:scale-105 mt-4">
                 {isSubmitting ? (
                   <>
                     <LoaderCircle className="animate-spin mr-2" size={20} />
@@ -188,12 +149,7 @@ export default function SignUpPage() {
                   </>
                 )}
               </Button>
-               {/* Show message if Firebase isn't ready */}
-               {!firebaseReady && (
-                    <p className="text-xs text-destructive text-center mt-2 flex items-center justify-center gap-1">
-                        <AlertTriangle size={14} /> Firebase is not configured correctly. Signup is disabled.
-                    </p>
-               )}
+               {/* Removed Firebase readiness message */}
             </form>
           </Form>
         </CardContent>
@@ -212,4 +168,3 @@ export default function SignUpPage() {
     </main>
   );
 }
-
