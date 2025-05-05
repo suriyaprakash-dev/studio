@@ -29,6 +29,23 @@ export default function LoginPage() {
   const { toast } = useToast();
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [firebaseReady, setFirebaseReady] = React.useState(false);
+
+   React.useEffect(() => {
+    // Check if auth object is available (Firebase initialized)
+    if (auth) {
+      setFirebaseReady(true);
+    } else {
+        // Handle case where Firebase didn't initialize (e.g., missing config)
+         console.error("Firebase Auth is not available. Check configuration.");
+         toast({
+             title: "Configuration Error",
+             description: "Firebase is not configured correctly. Please check environment variables.",
+             variant: "destructive",
+         });
+    }
+  }, []);
+
 
   const form = useForm<LoginFormInput>({
     resolver: zodResolver(formSchema),
@@ -41,6 +58,14 @@ export default function LoginPage() {
 
   // onSubmit handler
   const onSubmit: SubmitHandler<LoginFormInput> = async (data) => {
+     if (!firebaseReady || !auth) {
+        toast({
+            title: "Login Unavailable",
+            description: "Firebase is not ready. Cannot process login.",
+            variant: "destructive",
+        });
+        return;
+    }
     setIsSubmitting(true);
     try {
         // Use Firebase to sign in the user
@@ -74,6 +99,9 @@ export default function LoginPage() {
                     break;
                 case 'auth/too-many-requests':
                     errorMessage = 'Access temporarily disabled due to too many failed login attempts. Please reset your password or try again later.';
+                    break;
+                 case 'auth/api-key-not-valid': // Handle specific API key error
+                    errorMessage = 'Firebase API Key is invalid. Please check your configuration.';
                     break;
                 default:
                     // Use the error message if available, otherwise keep the generic one
@@ -137,7 +165,7 @@ export default function LoginPage() {
                   </FormItem>
                 )}
               />
-              <Button type="submit" disabled={isSubmitting} className="w-full text-lg py-3 rounded-lg transition-transform transform hover:scale-105 mt-4">
+              <Button type="submit" disabled={isSubmitting || !firebaseReady} className="w-full text-lg py-3 rounded-lg transition-transform transform hover:scale-105 mt-4">
                 {isSubmitting ? (
                   <>
                     <LoaderCircle className="animate-spin mr-2" size={20} />
@@ -150,6 +178,9 @@ export default function LoginPage() {
                   </>
                 )}
               </Button>
+               {!firebaseReady && (
+                    <p className="text-xs text-destructive text-center mt-2">Firebase is not configured. Login is disabled.</p>
+               )}
             </form>
           </Form>
         </CardContent>

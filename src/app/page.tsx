@@ -10,7 +10,7 @@ import { ElasticityResult } from '@/components/ElasticityResult';
 import type { ElasticityResultData } from '@/app/actions';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { Target, LogIn, UserPlus, LogOut } from 'lucide-react';
+import { Target, LogIn, UserPlus, LogOut, LoaderCircle } from 'lucide-react'; // Added LoaderCircle
 import { Button } from '@/components/ui/button';
 import { auth } from '@/lib/firebase/client'; // Import Firebase auth
 import { onAuthStateChanged, signOut, User } from 'firebase/auth'; // Import Firebase auth functions
@@ -21,11 +21,26 @@ export default function Home() {
   const [isLoading, setIsLoading] = React.useState(false);
   const [user, setUser] = React.useState<User | null>(null); // Store Firebase user object
   const [authLoading, setAuthLoading] = React.useState(true); // Add loading state for auth check
+  const [firebaseReady, setFirebaseReady] = React.useState(false); // State for Firebase readiness
   const router = useRouter();
   const { toast } = useToast(); // Get toast function
 
   // Check authentication status on mount using Firebase listener
   React.useEffect(() => {
+    if (!auth) {
+      console.error("Firebase auth is not initialized. Cannot check auth state.");
+      setAuthLoading(false); // Stop loading, but Firebase is not ready
+      setFirebaseReady(false);
+       toast({
+            title: "Configuration Error",
+            description: "Firebase is not configured correctly. Authentication features disabled.",
+            variant: "destructive",
+        });
+      return; // Exit effect if auth is not available
+    }
+
+    setFirebaseReady(true); // Firebase auth is available
+
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser); // Set user to the Firebase user object or null
       setAuthLoading(false); // Auth check complete
@@ -50,6 +65,15 @@ export default function Home() {
   };
 
   const handleLogout = async () => {
+     if (!auth) {
+         console.error("Firebase auth is not initialized. Cannot log out.");
+          toast({
+            title: "Logout Failed",
+            description: "Firebase is not ready.",
+            variant: "destructive",
+        });
+        return;
+    }
     try {
         await signOut(auth); // Sign out using Firebase
         setUser(null); // Clear user state
@@ -76,41 +100,43 @@ export default function Home() {
       return (
           <main className="flex min-h-screen flex-col items-center justify-center p-6">
               <LoaderCircle className="animate-spin h-12 w-12 text-primary" />
-              <p className="mt-4 text-muted-foreground">Loading...</p>
+              <p className="mt-4 text-muted-foreground">Checking authentication...</p>
           </main>
       );
   }
 
-  const isAuthenticated = !!user; // Determine auth status based on user object
+  const isAuthenticated = !!user && firebaseReady; // Determine auth status based on user object AND Firebase readiness
 
   return (
     <main className="flex min-h-screen flex-col items-center p-6 md:p-12 lg:p-16">
         {/* Header Section */}
         <header className="w-full max-w-5xl mb-10 relative">
             {/* Login/Signup/Logout Links - Positioned top-right */}
-            <div className="absolute top-0 right-0 flex gap-2">
-              {isAuthenticated ? (
-                 <Button variant="ghost" onClick={handleLogout} className="flex items-center gap-1.5 text-sm">
-                    <LogOut size={16} />
-                    Logout
-                 </Button>
-              ) : (
-                 <>
-                    <Button variant="ghost" asChild>
-                      <Link href="/login" className="flex items-center gap-1.5 text-sm">
-                        <LogIn size={16} />
-                        Login
-                      </Link>
+             {firebaseReady && ( // Only show auth buttons if Firebase is ready
+                <div className="absolute top-0 right-0 flex gap-2">
+                {isAuthenticated ? (
+                    <Button variant="ghost" onClick={handleLogout} className="flex items-center gap-1.5 text-sm">
+                        <LogOut size={16} />
+                        Logout
                     </Button>
-                    <Button variant="outline" asChild>
-                      <Link href="/signup" className="flex items-center gap-1.5 text-sm">
-                        <UserPlus size={16} />
-                        Sign Up
-                      </Link>
-                    </Button>
-                 </>
-              )}
-            </div>
+                ) : (
+                    <>
+                        <Button variant="ghost" asChild>
+                        <Link href="/login" className="flex items-center gap-1.5 text-sm">
+                            <LogIn size={16} />
+                            Login
+                        </Link>
+                        </Button>
+                        <Button variant="outline" asChild>
+                        <Link href="/signup" className="flex items-center gap-1.5 text-sm">
+                            <UserPlus size={16} />
+                            Sign Up
+                        </Link>
+                        </Button>
+                    </>
+                )}
+                </div>
+             )}
 
            {/* Main Title and Description */}
             <div className="text-center mt-12 md:mt-0"> {/* Added margin-top for spacing */}
@@ -118,13 +144,16 @@ export default function Home() {
                 <Target size={36} className="text-primary"/> PriceLens
               </h1>
               <p className="text-xl text-muted-foreground">
-                {isAuthenticated ? `Welcome, ${user.email || 'User'}!` : 'Welcome to PriceLens!'}
+                {isAuthenticated ? `Welcome, ${user?.email || 'User'}!` : 'Welcome to PriceLens!'}
+                 {!firebaseReady && <span className="text-xs text-destructive ml-2">(Auth Disabled)</span>}
               </p>
                <Separator className="my-6 max-w-md mx-auto" />
                <p className="text-base text-muted-foreground max-w-3xl mx-auto leading-relaxed">
                   {isAuthenticated
                     ? 'Input your initial and final price and quantity data points below to compute the Price Elasticity of Demand (PED) using the midpoint formula, helping you make informed pricing decisions.'
-                    : 'Log in or sign up to gain insights into how price adjustments impact consumer demand and make informed pricing decisions.'}
+                    : firebaseReady
+                        ? 'Log in or sign up to gain insights into how price adjustments impact consumer demand and make informed pricing decisions.'
+                        : 'Authentication is currently unavailable due to a configuration issue. Please contact support.'}
               </p>
             </div>
         </header>
@@ -142,7 +171,7 @@ export default function Home() {
                 <ElasticityResult result={result} isLoading={isLoading} />
              </div>
           </div>
-        ) : (
+        ) : firebaseReady ? ( // Only show login prompt if Firebase is ready but user not logged in
             <Card className="w-full max-w-lg mt-8 text-center p-8 bg-secondary/50 rounded-xl shadow-md">
                 <CardHeader>
                     <CardTitle className="text-2xl">Get Started</CardTitle>
@@ -163,6 +192,13 @@ export default function Home() {
                     </Button>
                 </CardContent>
             </Card>
+        ) : ( // Show config error message if Firebase not ready
+             <Card className="w-full max-w-lg mt-8 text-center p-8 bg-destructive/10 border-destructive rounded-xl shadow-md">
+                <CardHeader>
+                    <CardTitle className="text-2xl text-destructive">Configuration Error</CardTitle>
+                    <CardDescription className="text-destructive-foreground/80">Authentication features are disabled due to missing Firebase configuration. Please ensure your environment variables are set correctly.</CardDescription>
+                </CardHeader>
+             </Card>
         )}
 
 

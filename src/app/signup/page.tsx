@@ -15,7 +15,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { useToast } from '@/hooks/use-toast';
 import { LoaderCircle, LogIn, UserPlus } from 'lucide-react';
 import { auth } from '@/lib/firebase/client'; // Import Firebase auth instance
-import { createUserWithEmailAndPassword } from 'firebase/auth'; // Import Firebase auth functions, removed FirebaseError
+import { createUserWithEmailAndPassword } from 'firebase/auth'; // Import Firebase auth functions
 
 // Define the validation schema using Zod
 const formSchema = z.object({
@@ -33,6 +33,23 @@ export default function SignUpPage() {
   const { toast } = useToast();
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [firebaseReady, setFirebaseReady] = React.useState(false);
+
+   React.useEffect(() => {
+    // Check if auth object is available (Firebase initialized)
+    if (auth) {
+      setFirebaseReady(true);
+    } else {
+      // Handle case where Firebase didn't initialize (e.g., missing config)
+      console.error("Firebase Auth is not available. Check configuration.");
+       toast({
+         title: "Configuration Error",
+         description: "Firebase is not configured correctly. Please check environment variables.",
+         variant: "destructive",
+       });
+    }
+  }, []);
+
 
   const form = useForm<SignUpFormInput>({
     resolver: zodResolver(formSchema),
@@ -46,6 +63,14 @@ export default function SignUpPage() {
 
   // onSubmit handler
   const onSubmit: SubmitHandler<SignUpFormInput> = async (data) => {
+     if (!firebaseReady || !auth) {
+        toast({
+            title: "Signup Unavailable",
+            description: "Firebase is not ready. Cannot process signup.",
+            variant: "destructive",
+        });
+        return;
+    }
     setIsSubmitting(true);
     try {
       // Use Firebase to create the user
@@ -79,6 +104,9 @@ export default function SignUpPage() {
               case 'auth/weak-password':
                   errorMessage = 'The password is too weak.';
                   break;
+              case 'auth/api-key-not-valid': // Handle specific API key error
+                  errorMessage = 'Firebase API Key is invalid. Please check your configuration.';
+                   break;
               default:
                   // Use the error message if available, otherwise keep the generic one
                   errorMessage = error.message ? `Signup failed: ${error.message}` : errorMessage;
@@ -148,7 +176,7 @@ export default function SignUpPage() {
                   </FormItem>
                 )}
               />
-              <Button type="submit" disabled={isSubmitting} className="w-full text-lg py-3 rounded-lg transition-transform transform hover:scale-105 mt-4">
+              <Button type="submit" disabled={isSubmitting || !firebaseReady} className="w-full text-lg py-3 rounded-lg transition-transform transform hover:scale-105 mt-4">
                 {isSubmitting ? (
                   <>
                     <LoaderCircle className="animate-spin mr-2" size={20} />
@@ -161,6 +189,9 @@ export default function SignUpPage() {
                   </>
                 )}
               </Button>
+               {!firebaseReady && (
+                    <p className="text-xs text-destructive text-center mt-2">Firebase is not configured. Signup is disabled.</p>
+               )}
             </form>
           </Form>
         </CardContent>
