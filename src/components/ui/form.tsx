@@ -104,16 +104,18 @@ const FormLabel = React.forwardRef<
 })
 FormLabel.displayName = "FormLabel"
 
-// Updated FormControl: Explicitly destructure and render children within Slot
+// Updated FormControl: Changed ref type to be more generic
 const FormControl = React.forwardRef<
-  React.ElementRef<typeof Slot>,
+  // The ref should ideally match the type of the underlying element (e.g., HTMLInputElement)
+  // Using a more generic type like React.ElementRef<typeof React.Component> as a possible fix attempt.
+  React.ElementRef<typeof React.Component>,
   React.ComponentPropsWithoutRef<typeof Slot>
->(({ children, ...props }, ref) => { // Explicitly get children
+>(({ children, ...props }, ref) => {
   const { error, formItemId, formDescriptionId, formMessageId } = useFormField();
 
   return (
     <Slot
-      ref={ref}
+      ref={ref} // Pass the ref to Slot
       id={formItemId}
       aria-describedby={
         !error
@@ -121,9 +123,10 @@ const FormControl = React.forwardRef<
           : `${formDescriptionId} ${formMessageId}`
       }
       aria-invalid={!!error}
-      {...props} // Pass remaining props (like className) to Slot
+      {...props}
     >
-      {children} {/* Render children explicitly inside Slot */}
+       {/* Slot expects a single child to clone props onto */}
+      {children}
     </Slot>
   );
 });
@@ -181,4 +184,3 @@ export {
   FormMessage,
   FormField,
 }
-
