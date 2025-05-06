@@ -1,4 +1,5 @@
 
+
 // @ts-nocheck - Keep temporarily if needed, but aim to remove
 'use client';
 
@@ -10,7 +11,7 @@ import { ElasticityResult } from '@/components/ElasticityResult';
 import type { ElasticityResultData, ElasticityInput } from '@/app/actions'; // Import ElasticityInput
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { Target, LogIn, UserPlus, LogOut, LoaderCircle, AlertTriangle, BookOpen, Settings } from 'lucide-react'; // Added Settings icon
+import { Target, LogIn, UserPlus, LogOut, LoaderCircle, AlertTriangle, BookOpen, Settings, Phone } from 'lucide-react'; // Added Settings, Phone icons
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 
@@ -257,10 +258,14 @@ export default function Home() {
                      <Link href="#" className="hover:text-primary hover:underline underline-offset-4 transition-colors"> {/* Placeholder */}
                         Terms of Service
                     </Link>
+                    <Link href="#" className="hover:text-primary hover:underline underline-offset-4 transition-colors flex items-center gap-1">
+                        <Phone size={14} /> Contact Us
+                    </Link>
                 </nav>
             </div>
         </footer>
     </div>
   );
 }
+
 
