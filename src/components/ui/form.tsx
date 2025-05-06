@@ -1,5 +1,3 @@
-
-
 "use client"
 
 import * as React from "react"
@@ -123,45 +121,31 @@ const FormLabel = React.forwardRef<
 FormLabel.displayName = "FormLabel"
 
 
-// Refactored FormControl using React.cloneElement instead of Slot
 const FormControl = React.forwardRef<
-  HTMLElement, // Use a more general type or the specific element type if known
-  React.HTMLAttributes<HTMLElement> // Adjust props type accordingly
+  HTMLElement,
+  React.HTMLAttributes<HTMLElement>
 >(({ children, className, ...props }, ref) => {
   const { error, formItemId, formDescriptionId, formMessageId } = useFormField();
 
-  try {
-    // Ensure there is only one child
-    const child = React.Children.only(children);
+  // Find the first valid React element child, ignoring text nodes (whitespace)
+  const childElement = React.Children.toArray(children).find(React.isValidElement) as React.ReactElement | undefined;
 
-    // Check if the child is a valid React element before cloning
-    if (!React.isValidElement(child)) {
-      // This case should ideally not happen if used correctly, but good to handle
-      console.error("FormControl expects a single valid React element child.");
-      return <>{children}</>;
-    }
-
-    // Clone the child and add the necessary props
-    // The ref is passed down; the child component (e.g., Input) must use React.forwardRef
-    return React.cloneElement(child as React.ReactElement, {
-      ref: ref, // Pass the ref down
-      id: formItemId,
-      'aria-describedby': !error
-        ? formDescriptionId // Use the ID directly
-        : `${formDescriptionId} ${formMessageId}`, // Combine IDs if error exists
-      'aria-invalid': !!error,
-      // Merge className, ensuring child's className and FormControl's className are combined
-      className: cn(child.props.className, className),
-      ...props, // Spread other props passed to FormControl (careful not to overwrite child props unintentionally)
-      // Note: React.cloneElement automatically preserves existing props on the child,
-      // so explicitly spreading child.props is usually not needed unless overriding specific ones.
-    });
-  } catch (e) {
-     // Catch the "React.Children.only" error if it still occurs (e.g., multiple children passed)
-     console.error("FormControl received multiple children or an invalid child. Expected a single valid React element.", children, e);
-     // Render children directly as a fallback, though this breaks accessibility wiring
-     return <>{children}</>;
+  if (!childElement) {
+    console.error("FormControl expects a single valid React element child, but found none or only invalid children.");
+    // Render children as a fallback or return null/empty fragment
+    return <>{children}</>;
   }
+
+  return React.cloneElement(childElement, {
+    ref: ref,
+    id: formItemId,
+    'aria-describedby': !error
+      ? formDescriptionId
+      : `${formDescriptionId} ${formMessageId}`,
+    'aria-invalid': !!error,
+    className: cn(childElement.props.className, className),
+    ...props,
+  });
 });
 FormControl.displayName = "FormControl";
 
@@ -217,4 +201,3 @@ export {
   FormMessage,
   FormField,
 }
-
