@@ -1,22 +1,27 @@
+
 'use server';
 
 import { z } from 'zod';
 
+// Schema for a single data point
+const DataPointSchema = z.object({
+  price: z.number().positive('Price must be positive'),
+  quantity: z.number().positive('Quantity must be positive'),
+});
+
+// Updated schema to accept an array of data points
 const ElasticityInputSchema = z.object({
-  initialPrice: z.number().positive('Initial price must be positive'),
-  finalPrice: z.number().positive('Final price must be positive'),
-  initialQuantity: z.number().positive('Initial quantity must be positive'),
-  finalQuantity: z.number().positive('Final quantity must be positive'),
+  points: z.array(DataPointSchema).min(2, 'At least two data points are required for calculation'),
 });
 
 export type ElasticityInput = z.infer<typeof ElasticityInputSchema>;
+export type DataPoint = z.infer<typeof DataPointSchema>; // Export for form usage
 
-// Add percentage changes to the result data
 export type ElasticityResultData = {
   elasticity: number;
   classification: 'Elastic' | 'Inelastic' | 'Unit Elastic' | 'Perfectly Inelastic' | 'Perfectly Elastic' | 'Invalid Input';
-  percentageChangeQ?: number; // Absolute percentage change in quantity
-  percentageChangeP?: number; // Absolute percentage change in price
+  percentageChangeQ?: number;
+  percentageChangeP?: number;
   error?: string;
 };
 
@@ -33,35 +38,38 @@ export async function calculateElasticity(
     };
   }
 
-  const { initialPrice, finalPrice, initialQuantity, finalQuantity } = validation.data;
+  const { points } = validation.data;
+
+  // Use the first two points for PED calculation
+  // The form validation already ensures at least two points.
+  const initialPoint = points[0];
+  const finalPoint = points[1];
+
+  const initialPrice = initialPoint.price;
+  const finalPrice = finalPoint.price;
+  const initialQuantity = initialPoint.quantity;
+  const finalQuantity = finalPoint.quantity;
 
   const deltaQ = finalQuantity - initialQuantity;
   const deltaP = finalPrice - initialPrice;
   const avgQ = (finalQuantity + initialQuantity) / 2;
   const avgP = (finalPrice + initialPrice) / 2;
 
-  // Handle edge cases: no change in price or quantity
   if (deltaP === 0 && deltaQ === 0) {
-    return { elasticity: NaN, classification: 'Invalid Input', error: "Price and quantity haven't changed." };
+    return { elasticity: NaN, classification: 'Invalid Input', error: "Price and quantity haven't changed between the first two points." };
   }
   if (deltaP === 0) {
-     // Price constant, quantity changed -> Perfectly Elastic
-     // Percentage changes: P=0, Q is relative change
      const percentageChangeQ = avgQ !== 0 ? Math.abs(deltaQ / avgQ) : Infinity;
     return { elasticity: Infinity, classification: 'Perfectly Elastic', percentageChangeQ: percentageChangeQ, percentageChangeP: 0 };
   }
    if (deltaQ === 0) {
-    // Quantity constant, price changed -> Perfectly Inelastic
-    // Percentage changes: Q=0, P is relative change
     const percentageChangeP = avgP !== 0 ? Math.abs(deltaP / avgP) : Infinity;
     return { elasticity: 0, classification: 'Perfectly Inelastic', percentageChangeQ: 0, percentageChangeP: percentageChangeP };
   }
 
-  // Handle division by zero for average quantity or price (shouldn't happen with positive inputs validation, but good practice)
   if (avgQ === 0 || avgP === 0) {
-      return { elasticity: NaN, classification: 'Invalid Input', error: 'Average price or quantity cannot be zero.' };
+      return { elasticity: NaN, classification: 'Invalid Input', error: 'Average price or quantity (for the first two points) cannot be zero.' };
   }
-
 
   const percentageChangeQRaw = deltaQ / avgQ;
   const percentageChangePRaw = deltaP / avgP;
@@ -69,10 +77,8 @@ export async function calculateElasticity(
   const elasticity = percentageChangeQRaw / percentageChangePRaw;
   const absElasticity = Math.abs(elasticity);
 
-  // Calculate absolute percentage changes for the chart
   const absPercentageChangeQ = Math.abs(percentageChangeQRaw);
   const absPercentageChangeP = Math.abs(percentageChangePRaw);
-
 
   let classification: ElasticityResultData['classification'];
   if (absElasticity > 1) {
@@ -84,13 +90,10 @@ export async function calculateElasticity(
   } else if (absElasticity === 0) {
       classification = 'Perfectly Inelastic';
   } else if (!isFinite(absElasticity)) {
-       classification = 'Perfectly Elastic'; // Handle Infinity case from deltaP=0
+       classification = 'Perfectly Elastic';
+  } else {
+    classification = 'Invalid Input';
   }
-   else {
-    // This case might occur if elasticity is NaN for other reasons
-    classification = 'Invalid Input'; // Default or error case
-  }
-
 
   return {
       elasticity,
