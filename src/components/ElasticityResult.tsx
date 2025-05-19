@@ -2,24 +2,25 @@
 'use client';
 
 import * as React from 'react';
-import type { ElasticityResultData, ElasticityInput as ElasticityInputType } from '@/app/actions'; // Renamed to avoid conflict
+import type { ElasticityResultData, ElasticityInput as ElasticityInputType } from '@/app/actions';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator'; // Added Separator import
-import { TrendingUp, TrendingDown, Minus, BarChartBig, LoaderCircle, AlertCircle, PieChart as PieChartIcon, Scale, DollarSign } from 'lucide-react';
-import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts'; // Removed unused Legend, Tooltip (using ChartTooltip)
+import { Separator } from '@/components/ui/separator';
+import { TrendingUp, TrendingDown, Minus, BarChartBig, LoaderCircle, AlertCircle, Scale, DollarSign, BarChart2 } from 'lucide-react'; // Changed PieChartIcon to BarChart2
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Cell } from 'recharts'; // Added BarChart imports
 import {
   ChartTooltip,
   ChartTooltipContent,
   ChartContainer,
   ChartLegend,
   ChartLegendContent,
+  type ChartConfig, // Import ChartConfig type
 } from "@/components/ui/chart";
 
 interface ElasticityResultProps {
   result: ElasticityResultData | null;
   isLoading: boolean;
-  inputData: ElasticityInputType | null; // Updated to use the new ElasticityInputType which contains points array
+  inputData: ElasticityInputType | null;
 }
 
 function getBadgeVariant(classification: ElasticityResultData['classification']): 'default' | 'secondary' | 'destructive' | 'outline' | 'accent' {
@@ -75,48 +76,35 @@ function getDescription(classification: ElasticityResultData['classification']):
     }
 }
 
-const chartConfig = {
-  percentageChangeP: {
+// Configuration for the Bar Chart
+const barChartConfig = {
+  price: {
     label: "% Change Price",
     color: "hsl(var(--chart-1))",
     icon: DollarSign,
   },
-  percentageChangeQ: {
+  quantity: {
     label: "% Change Quantity",
     color: "hsl(var(--chart-2))",
     icon: Scale,
   },
-} satisfies React.ComponentProps<typeof ChartContainer>["config"];
-
-const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent }: any) => {
-  const RADIAN = Math.PI / 180;
-  const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
-  const x = cx + radius * Math.cos(-midAngle * RADIAN);
-  const y = cy + radius * Math.sin(-midAngle * RADIAN);
-  const percentage = (percent * 100).toFixed(1);
-
-  if (percent < 0.05) return null; // Don't render label if too small
-
-  return (
-    <text x={x} y={y} fill="hsl(var(--primary-foreground))" textAnchor={x > cx ? 'start' : 'end'} dominantBaseline="central" fontSize={12} fontWeight={500}>
-      {`${percentage}%`}
-    </text>
-  );
-};
+} satisfies ChartConfig;
 
 
 export function ElasticityResult({ result, isLoading, inputData }: ElasticityResultProps) {
 
-  const showChart = result && !result.error && result.percentageChangeP !== undefined && result.percentageChangeQ !== undefined && isFinite(result.percentageChangeP) && isFinite(result.percentageChangeQ) && (result.percentageChangeP > 0 || result.percentageChangeQ > 0);
+  const showChart = result && !result.error && result.percentageChangeP !== undefined && result.percentageChangeQ !== undefined;
 
-  const pieData = showChart
-    ? [
-        { name: chartConfig.percentageChangeP.label, value: result.percentageChangeP!, fill: chartConfig.percentageChangeP.color },
-        { name: chartConfig.percentageChangeQ.label, value: result.percentageChangeQ!, fill: chartConfig.percentageChangeQ.color },
-      ].filter(item => item.value > 0) // Filter out zero values for pie chart
+  // Data for the Bar Chart
+  // It's an array with one object, where keys 'price' and 'quantity' will be used for dataKeys of Bars
+  const chartDataForBar = showChart
+    ? [{
+        name: 'Comparison', // This name is for the XAxis category
+        price: result.percentageChangeP! * 100, // Values are percentages
+        quantity: result.percentageChangeQ! * 100,
+      }]
     : [];
 
-  // Determine price and quantity change direction using the first two points if inputData is available
   let priceIncreased: boolean | undefined;
   let quantityIncreased: boolean | undefined;
 
@@ -149,7 +137,6 @@ export function ElasticityResult({ result, isLoading, inputData }: ElasticityRes
            </div>
         ) : result ? (
           <>
-            {/* Section for PED value, classification, and description */}
             <div className="flex flex-col items-center space-y-3 w-full">
                 {result.error ? (
                    <>
@@ -173,41 +160,39 @@ export function ElasticityResult({ result, isLoading, inputData }: ElasticityRes
                  <p className="text-sm text-muted-foreground pt-2 max-w-xs">{getDescription(result.classification)}</p>
             </div>
 
-            {/* Section for the Chart, shown if showChart is true and pieData has entries */}
-            {showChart && pieData.length > 0 && (
+            {showChart && chartDataForBar.length > 0 && (
               <>
                 <Separator className="my-4 w-3/4 mx-auto" />
-                <div className="w-full space-y-4">
+                <div className="w-full space-y-3">
                     <h3 className="text-lg font-medium text-foreground flex items-center justify-center gap-2">
-                        <PieChartIcon size={20} /> Relative Change Magnitude
+                        <BarChart2 size={20} /> Relative Change Magnitude
                     </h3>
-                    <ChartContainer config={chartConfig} className="mx-auto aspect-square h-[200px] w-full">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <PieChart>
-                                <ChartTooltip
-                                    cursor={false}
-                                    content={<ChartTooltipContent hideLabel />}
-                                />
-                                <Pie
-                                    data={pieData}
-                                    dataKey="value"
-                                    nameKey="name"
-                                    cx="50%"
-                                    cy="50%"
-                                    outerRadius={80}
-                                    innerRadius={50}
-                                    labelLine={false}
-                                    label={renderCustomizedLabel}
-                                    strokeWidth={2}
-                                    stroke="hsl(var(--background))"
-                                >
-                                    {pieData.map((entry, index) => (
-                                        <Cell key={`cell-${index}`} fill={entry.fill} />
-                                    ))}
-                                </Pie>
-                                <ChartLegend content={<ChartLegendContent nameKey="name" />} />
-                            </PieChart>
-                        </ResponsiveContainer>
+                    <ChartContainer config={barChartConfig} className="mx-auto aspect-[16/10] h-[250px] w-full">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={chartDataForBar} margin={{ top: 20, right: 10, left: -10, bottom: 5 }} barSize={40}>
+                          <CartesianGrid vertical={false} strokeDasharray="3 3" />
+                          <XAxis
+                            dataKey="name"
+                            tickLine={false}
+                            axisLine={false}
+                            tick={false} // Hide tick label "Comparison" as it's not very informative here
+                            label={{ value: "Comparison Metric", position: 'insideBottom', dy: 10, fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
+                          />
+                          <YAxis
+                            tickFormatter={(value) => `${value.toFixed(0)}%`}
+                            domain={[0, 'dataMax + 10']} // Add some padding to Y-axis
+                            allowDataOverflow={true}
+                            width={50}
+                           />
+                          <ChartTooltip
+                            cursor={{ fill: 'hsl(var(--background))', radius: 4 }}
+                            content={<ChartTooltipContent indicator="dot" />}
+                          />
+                          <ChartLegend content={<ChartLegendContent />} />
+                          <Bar dataKey="price" name="price" fill="var(--color-price)" radius={[4, 4, 0, 0]} />
+                          <Bar dataKey="quantity" name="quantity" fill="var(--color-quantity)" radius={[4, 4, 0, 0]} />
+                        </BarChart>
+                      </ResponsiveContainer>
                     </ChartContainer>
                     <p className="text-xs text-muted-foreground italic text-center max-w-md mx-auto">
                         Shows the absolute percentage change in price vs. quantity (using the first two data points).
@@ -224,4 +209,3 @@ export function ElasticityResult({ result, isLoading, inputData }: ElasticityRes
     </Card>
   );
 }
-
