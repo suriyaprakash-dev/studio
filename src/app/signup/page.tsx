@@ -51,14 +51,13 @@ export default function SignUpPage() {
     setIsSubmitting(true);
     console.log("Simulating signup with:", data.email);
 
-    // Simulate API call delay
+    // Simulate API call delay for registration
     await new Promise(resolve => setTimeout(resolve, 1000));
 
     try {
         const existingUsersString = localStorage.getItem('registeredUsers');
         const existingUsers: StoredUser[] = existingUsersString ? JSON.parse(existingUsersString) : [];
 
-        // Check if email already exists (optional for this simulation, but good practice)
         if (existingUsers.some(user => user.email === data.email)) {
             toast({
                 title: "Sign Up Failed (Simulated)",
@@ -75,13 +74,34 @@ export default function SignUpPage() {
         localStorage.setItem('registeredUsers', JSON.stringify(existingUsers));
 
         console.log("Simulated Signup successful for:", data.email);
-        console.log(`Simulated: Confirmation email sent to ${data.email}`); // Simulate email sending log
+
+        // Call the API route to "send" the confirmation email
+        try {
+          const emailResponse = await fetch('/api/send-confirmation-email', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ email: data.email }),
+          });
+          const emailResult = await emailResponse.json();
+
+          if (emailResponse.ok) {
+            console.log('API call to send email successful (simulated):', emailResult.message);
+          } else {
+            console.warn('API call to send email failed (simulated):', emailResult.message);
+          }
+        } catch (apiError) {
+          console.error('Error calling send-confirmation-email API:', apiError);
+        }
+        
         toast({
             title: "Sign Up Successful (Simulated)",
-            description: `Your account has been created. A confirmation email has been (simulated) sent to ${data.email}. Please log in.`,
+            description: `Your account has been created. A confirmation email has been (simulated as initiated) to ${data.email}. Please log in.`,
             variant: "default",
         });
-        router.push('/login');
+        router.push('/login'); // Redirect to login page after signup
+
     } catch (e) {
         console.error("Could not save simulated user to localStorage:", e);
         toast({
@@ -176,4 +196,3 @@ export default function SignUpPage() {
     </main>
   );
 }
-
