@@ -75,9 +75,10 @@ export default function SignUpPage() {
         localStorage.setItem('registeredUsers', JSON.stringify(existingUsers));
 
         console.log("Simulated Signup successful for:", data.email);
+        console.log(`Simulated: Confirmation email sent to ${data.email}`); // Simulate email sending log
         toast({
             title: "Sign Up Successful (Simulated)",
-            description: "Your account has been created. Please log in.",
+            description: `Your account has been created. A confirmation email has been (simulated) sent to ${data.email}. Please log in.`,
             variant: "default",
         });
         router.push('/login');
@@ -90,7 +91,6 @@ export default function SignUpPage() {
         });
         setIsSubmitting(false);
     }
-    // No need to set isSubmitting to false if redirecting, but good if staying on page after error.
   };
 
 
@@ -113,7 +113,7 @@ export default function SignUpPage() {
                   <FormItem>
                     <FormLabel>Email Address</FormLabel>
                     <FormControl>
-                      <Input type="email" placeholder="you@example.com" {...field} />
+                      <Input type="email" placeholder="you@example.com" {...field} value={field.value ?? ''} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -126,7 +126,7 @@ export default function SignUpPage() {
                   <FormItem>
                     <FormLabel>Password</FormLabel>
                     <FormControl>
-                      <Input type="password" placeholder="•••••••• (min. 8 characters)" {...field} />
+                      <Input type="password" placeholder="•••••••• (min. 8 characters)" {...field} value={field.value ?? ''}/>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -139,7 +139,7 @@ export default function SignUpPage() {
                   <FormItem>
                     <FormLabel>Confirm Password</FormLabel>
                     <FormControl>
-                      <Input type="password" placeholder="••••••••" {...field} />
+                      <Input type="password" placeholder="••••••••" {...field} value={field.value ?? ''} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -176,3 +176,4 @@ export default function SignUpPage() {
     </main>
   );
 }
+
