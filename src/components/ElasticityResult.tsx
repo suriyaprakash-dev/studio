@@ -5,8 +5,9 @@ import * as React from 'react';
 import type { ElasticityResultData, ElasticityInput as ElasticityInputType } from '@/app/actions'; // Renamed to avoid conflict
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator'; // Added Separator import
 import { TrendingUp, TrendingDown, Minus, BarChartBig, LoaderCircle, AlertCircle, PieChart as PieChartIcon, Scale, DollarSign } from 'lucide-react';
-import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts'; // Removed unused Legend, Tooltip (using ChartTooltip)
 import {
   ChartTooltip,
   ChartTooltipContent,
@@ -94,7 +95,7 @@ const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, per
   const y = cy + radius * Math.sin(-midAngle * RADIAN);
   const percentage = (percent * 100).toFixed(1);
 
-  if (percent < 0.05) return null;
+  if (percent < 0.05) return null; // Don't render label if too small
 
   return (
     <text x={x} y={y} fill="hsl(var(--primary-foreground))" textAnchor={x > cx ? 'start' : 'end'} dominantBaseline="central" fontSize={12} fontWeight={500}>
@@ -110,9 +111,9 @@ export function ElasticityResult({ result, isLoading, inputData }: ElasticityRes
 
   const pieData = showChart
     ? [
-        { name: '% Change Price', value: result.percentageChangeP!, fill: chartConfig.percentageChangeP.color },
-        { name: '% Change Quantity', value: result.percentageChangeQ!, fill: chartConfig.percentageChangeQ.color },
-      ]
+        { name: chartConfig.percentageChangeP.label, value: result.percentageChangeP!, fill: chartConfig.percentageChangeP.color },
+        { name: chartConfig.percentageChangeQ.label, value: result.percentageChangeQ!, fill: chartConfig.percentageChangeQ.color },
+      ].filter(item => item.value > 0) // Filter out zero values for pie chart
     : [];
 
   // Determine price and quantity change direction using the first two points if inputData is available
@@ -148,7 +149,8 @@ export function ElasticityResult({ result, isLoading, inputData }: ElasticityRes
            </div>
         ) : result ? (
           <>
-             <div className="flex flex-col items-center space-y-3 w-full">
+            {/* Section for PED value, classification, and description */}
+            <div className="flex flex-col items-center space-y-3 w-full">
                 {result.error ? (
                    <>
                     <Badge variant={getBadgeVariant(result.classification)} className="text-base px-4 py-1 flex items-center gap-2 shadow-sm">
@@ -169,47 +171,50 @@ export function ElasticityResult({ result, isLoading, inputData }: ElasticityRes
                  </>
                 )}
                  <p className="text-sm text-muted-foreground pt-2 max-w-xs">{getDescription(result.classification)}</p>
-             </div>
+            </div>
 
-             {showChart && (
-              <div className="w-full pt-4 space-y-4">
-                <h3 className="text-lg font-medium text-foreground flex items-center justify-center gap-2">
-                    <PieChartIcon size={20} /> Relative Change Magnitude
-                </h3>
-                 <ChartContainer config={chartConfig} className="mx-auto aspect-square h-[200px] w-full">
-                    <ResponsiveContainer width="100%" height="100%">
-                        <PieChart>
-                            <ChartTooltip
-                                cursor={false}
-                                content={<ChartTooltipContent hideLabel />}
-                            />
-                            <Pie
-                                data={pieData}
-                                dataKey="value"
-                                nameKey="name"
-                                cx="50%"
-                                cy="50%"
-                                outerRadius={80}
-                                innerRadius={50}
-                                fill="hsl(var(--primary))"
-                                labelLine={false}
-                                label={renderCustomizedLabel}
-                                strokeWidth={2}
-                                stroke="hsl(var(--background))"
-                            >
-                                {pieData.map((entry, index) => (
-                                    <Cell key={`cell-${index}`} fill={entry.fill} />
-                                ))}
-                            </Pie>
-                            <ChartLegend content={<ChartLegendContent nameKey="name" />} />
-                        </PieChart>
-                    </ResponsiveContainer>
-                 </ChartContainer>
-                 <p className="text-xs text-muted-foreground italic text-center max-w-xs mx-auto">
-                    Shows the absolute percentage change in price vs. quantity (using first two points).
-                    {priceIncreased !== undefined && quantityIncreased !== undefined && ` Price ${priceIncreased ? 'increased' : 'decreased'}, Quantity ${quantityIncreased ? 'increased' : 'decreased'}.`}
-                 </p>
-               </div>
+            {/* Section for the Chart, shown if showChart is true and pieData has entries */}
+            {showChart && pieData.length > 0 && (
+              <>
+                <Separator className="my-4 w-3/4 mx-auto" />
+                <div className="w-full space-y-4">
+                    <h3 className="text-lg font-medium text-foreground flex items-center justify-center gap-2">
+                        <PieChartIcon size={20} /> Relative Change Magnitude
+                    </h3>
+                    <ChartContainer config={chartConfig} className="mx-auto aspect-square h-[200px] w-full">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <PieChart>
+                                <ChartTooltip
+                                    cursor={false}
+                                    content={<ChartTooltipContent hideLabel />}
+                                />
+                                <Pie
+                                    data={pieData}
+                                    dataKey="value"
+                                    nameKey="name"
+                                    cx="50%"
+                                    cy="50%"
+                                    outerRadius={80}
+                                    innerRadius={50}
+                                    labelLine={false}
+                                    label={renderCustomizedLabel}
+                                    strokeWidth={2}
+                                    stroke="hsl(var(--background))"
+                                >
+                                    {pieData.map((entry, index) => (
+                                        <Cell key={`cell-${index}`} fill={entry.fill} />
+                                    ))}
+                                </Pie>
+                                <ChartLegend content={<ChartLegendContent nameKey="name" />} />
+                            </PieChart>
+                        </ResponsiveContainer>
+                    </ChartContainer>
+                    <p className="text-xs text-muted-foreground italic text-center max-w-md mx-auto">
+                        Shows the absolute percentage change in price vs. quantity (using the first two data points).
+                        {priceIncreased !== undefined && quantityIncreased !== undefined && ` Price ${priceIncreased ? 'increased' : 'decreased'}, Quantity ${quantityIncreased ? 'increased' : 'decreased'}.`}
+                    </p>
+                </div>
+              </>
             )}
           </>
         ) : (
@@ -219,3 +224,4 @@ export function ElasticityResult({ result, isLoading, inputData }: ElasticityRes
     </Card>
   );
 }
+
