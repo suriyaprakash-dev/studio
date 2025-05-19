@@ -9,34 +9,35 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
-import { LoaderCircle, LogIn, UserPlus } from 'lucide-react';
-// Firebase imports removed
+import { LoaderCircle, LogIn } from 'lucide-react';
 
 // Define the validation schema using Zod
 const formSchema = z.object({
   email: z.string().email({ message: 'Invalid email address' }),
-  password: z.string().min(1, { message: 'Password is required' }), // Basic check, adjust as needed
+  password: z.string().min(1, { message: 'Password is required' }),
 });
 
 type LoginFormInput = z.infer<typeof formSchema>;
 
-// Simulate a user object (replace with your actual user data structure if needed)
-interface SimulatedUser {
-    uid: string;
+// Interface for the currently logged-in user (stored in localStorage)
+interface CurrentSimulatedUser {
     email: string;
 }
+
+// Interface for stored registered user data
+interface StoredUser {
+    email: string;
+    passwordHash: string; // In a real app, this would be a securely hashed password
+}
+
 
 export default function LoginPage() {
   const { toast } = useToast();
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
-  // Removed firebaseReady state
-
-  // Removed useEffect for checking Firebase readiness
 
   const form = useForm<LoginFormInput>({
     resolver: zodResolver(formSchema),
@@ -47,37 +48,49 @@ export default function LoginPage() {
      mode: 'onChange',
   });
 
-  // onSubmit handler - Simulate login
   const onSubmit: SubmitHandler<LoginFormInput> = async (data) => {
     setIsSubmitting(true);
-    console.log("Simulating login with:", data);
+    console.log("Attempting login with:", data.email);
 
     // Simulate API call delay
     await new Promise(resolve => setTimeout(resolve, 1000));
 
-    // Simulate login success (always succeeds for this example)
-    const simulatedUser: SimulatedUser = { uid: 'simulated-user-123', email: data.email };
-    console.log("Simulated Login successful:", simulatedUser);
-
-    // Store simulated user state (using localStorage for basic persistence)
     try {
-        localStorage.setItem('simulatedUser', JSON.stringify(simulatedUser));
+        const registeredUsersString = localStorage.getItem('registeredUsers');
+        const registeredUsers: StoredUser[] = registeredUsersString ? JSON.parse(registeredUsersString) : [];
+
+        const foundUser = registeredUsers.find(user => user.email === data.email);
+
+        // IMPORTANT: Password comparison is direct for simulation.
+        // In a real app, compare hashed passwords.
+        if (foundUser && foundUser.passwordHash === data.password) {
+            const currentUser: CurrentSimulatedUser = { email: foundUser.email };
+            localStorage.setItem('simulatedUser', JSON.stringify(currentUser));
+            console.log("Simulated Login successful for:", currentUser.email);
+            toast({
+                title: "Login Successful (Simulated)",
+                description: `Welcome back, ${currentUser.email}!`,
+                variant: "default",
+            });
+            router.push('/'); // Redirect to the main page
+        } else {
+            console.log("Simulated Login failed: Invalid credentials");
+            toast({
+                title: "Login Failed (Simulated)",
+                description: "Invalid email or password.",
+                variant: "destructive",
+            });
+            setIsSubmitting(false);
+        }
     } catch (e) {
-        console.error("Could not save simulated user to localStorage:", e);
-        // Handle potential storage errors (e.g., private browsing mode)
+        console.error("Error during login simulation:", e);
+        toast({
+            title: "Login Error (Simulated)",
+            description: "An unexpected error occurred. Please try again.",
+            variant: "destructive",
+        });
+        setIsSubmitting(false);
     }
-
-    // Show success message
-    toast({
-        title: "Login Successful (Simulated)",
-        description: "Welcome back!",
-        variant: "default",
-    });
-
-    // Redirect to dashboard/home page
-    router.push('/'); // Redirect to the main page
-
-    // No need to set isSubmitting to false here as we are redirecting
   };
 
   return (
@@ -99,7 +112,6 @@ export default function LoginPage() {
                   <FormItem>
                     <FormLabel>Email Address</FormLabel>
                     <FormControl>
-                      {/* Ensure value is controlled, defaulting to '' */}
                       <Input type="email" placeholder="you@example.com" {...field} value={field.value ?? ''} />
                     </FormControl>
                     <FormMessage />
@@ -113,12 +125,10 @@ export default function LoginPage() {
                   <FormItem>
                     <FormLabel>Password</FormLabel>
                     <FormControl>
-                      {/* Ensure value is controlled, defaulting to '' */}
                       <Input type="password" placeholder="••••••••" {...field} value={field.value ?? ''} />
                     </FormControl>
                      <FormMessage />
                      <div className="flex justify-end pt-1">
-                       {/* Keep forgot password link, though it's non-functional */}
                        <Link href="#" className="text-sm text-muted-foreground hover:text-primary hover:underline underline-offset-2">
                          Forgot password?
                        </Link>
@@ -126,7 +136,6 @@ export default function LoginPage() {
                   </FormItem>
                 )}
               />
-              {/* Removed disabled={!firebaseReady} */}
               <Button type="submit" disabled={isSubmitting} className="w-full text-lg py-3 rounded-lg transition-transform transform hover:scale-105 mt-4">
                 {isSubmitting ? (
                   <>
@@ -140,7 +149,6 @@ export default function LoginPage() {
                   </>
                 )}
               </Button>
-               {/* Removed Firebase readiness message */}
             </form>
           </Form>
         </CardContent>

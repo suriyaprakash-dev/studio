@@ -9,7 +9,6 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label'; // Keep Label for direct use if needed, though FormLabel is preferred within Form
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
@@ -27,10 +26,10 @@ const formSchema = z.object({
 
 type SignUpFormInput = z.infer<typeof formSchema>;
 
-// Simulate a user object (replace with your actual user data structure if needed)
-interface SimulatedUser {
-    uid: string;
+// Interface for stored user data
+interface StoredUser {
     email: string;
+    passwordHash: string; // In a real app, this would be a securely hashed password
 }
 
 export default function SignUpPage() {
@@ -45,32 +44,53 @@ export default function SignUpPage() {
       password: '',
       confirmPassword: '',
     },
-    mode: 'onChange', // Validate on change for better UX
+    mode: 'onChange',
   });
 
-  // onSubmit handler - Simulate signup
   const onSubmit: SubmitHandler<SignUpFormInput> = async (data) => {
     setIsSubmitting(true);
-    console.log("Simulating signup with:", data);
+    console.log("Simulating signup with:", data.email);
 
     // Simulate API call delay
     await new Promise(resolve => setTimeout(resolve, 1000));
 
-    // Simulate signup success (always succeeds for this example)
-    const simulatedUser: SimulatedUser = { uid: `simulated-user-${Date.now()}`, email: data.email };
-    console.log("Simulated Signup successful:", simulatedUser);
+    try {
+        const existingUsersString = localStorage.getItem('registeredUsers');
+        const existingUsers: StoredUser[] = existingUsersString ? JSON.parse(existingUsersString) : [];
 
-    // Show success message
-    toast({
-        title: "Sign Up Successful (Simulated)",
-        description: "Please log in with your new account.",
-        variant: "default",
-    });
+        // Check if email already exists (optional for this simulation, but good practice)
+        if (existingUsers.some(user => user.email === data.email)) {
+            toast({
+                title: "Sign Up Failed (Simulated)",
+                description: "This email address is already registered.",
+                variant: "destructive",
+            });
+            setIsSubmitting(false);
+            return;
+        }
 
-    // Redirect to login page
-    router.push('/login');
+        // For simulation, storing password directly. In real app, HASH THIS.
+        const newUser: StoredUser = { email: data.email, passwordHash: data.password };
+        existingUsers.push(newUser);
+        localStorage.setItem('registeredUsers', JSON.stringify(existingUsers));
 
-    // No need to set isSubmitting to false here as we are redirecting
+        console.log("Simulated Signup successful for:", data.email);
+        toast({
+            title: "Sign Up Successful (Simulated)",
+            description: "Your account has been created. Please log in.",
+            variant: "default",
+        });
+        router.push('/login');
+    } catch (e) {
+        console.error("Could not save simulated user to localStorage:", e);
+        toast({
+            title: "Sign Up Error (Simulated)",
+            description: "An error occurred during sign up. Please try again.",
+            variant: "destructive",
+        });
+        setIsSubmitting(false);
+    }
+    // No need to set isSubmitting to false if redirecting, but good if staying on page after error.
   };
 
 
@@ -134,7 +154,7 @@ export default function SignUpPage() {
                 ) : (
                   <>
                     <UserPlus size={20} className="mr-2" />
-                    Sign Up
+                    Sign Up & Proceed to Login
                   </>
                 )}
               </Button>
