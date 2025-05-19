@@ -48,7 +48,7 @@ interface ElasticityFormProps {
   onCalculationEnd: (result: ElasticityResultData, inputData?: FormValues) => void;
 }
 
-const defaultTwelvePoints = Array(12).fill(null).map(() => ({ price: undefined, quantity: undefined }));
+const defaultTwoPoints = Array(2).fill(null).map(() => ({ price: undefined, quantity: undefined }));
 const monthNamesShort = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
 export function ElasticityForm({ onCalculationStart, onCalculationEnd }: ElasticityFormProps) {
@@ -58,7 +58,7 @@ export function ElasticityForm({ onCalculationStart, onCalculationEnd }: Elastic
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      points: defaultTwelvePoints,
+      points: defaultTwoPoints, // Reverted to 2 default points
     },
     mode: 'onChange',
   });
@@ -115,8 +115,8 @@ export function ElasticityForm({ onCalculationStart, onCalculationEnd }: Elastic
              Data Input
             </CardTitle>
             <CardDescription>
-              Defaults to 12 data points for monthly input over a year. Adjust as needed (min. 2 points).
-              The primary PED calculation uses the first and last points of your series.
+              Enter at least two data points. Add more to see trends (e.g., monthly data for a year).
+              The primary PED calculation uses the first and last points of your series if more than two are entered.
               The graph will visualize all entered points.
             </CardDescription>
         </CardHeader>
