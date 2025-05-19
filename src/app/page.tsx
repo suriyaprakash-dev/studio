@@ -15,7 +15,7 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 
 interface SimulatedUser {
-    uid: string;
+    // uid: string; // Assuming uid might not be used if it was Firebase specific
     email: string;
 }
 
@@ -166,7 +166,7 @@ export default function Home() {
                  </h1>
                  <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed mb-8">
                       {isAuthenticated
-                        ? 'Input your price and quantity data points below to compute the Price Elasticity of Demand (PED) using the midpoint formula for the first two points. Add more points for future analysis.'
+                        ? 'Input price and quantity data points. Add multiple points (e.g., monthly data for a year) to see trends. Price Elasticity (PED) is calculated using the midpoint formula between the first and last points if more than two are entered.'
                         : 'Gain insights into how price adjustments impact consumer demand. Log in or sign up to use the calculator.'
                        }
                   </p>
@@ -217,7 +217,7 @@ export default function Home() {
                         <CardTitle className="text-2xl font-semibold flex items-center gap-2">
                             <BookOpen size={22} /> Understanding Elasticity
                         </CardTitle>
-                         <CardDescription>Interpret your Price Elasticity of Demand (PED) result (calculated using the first two data points):</CardDescription>
+                         <CardDescription>Interpret your Price Elasticity of Demand (PED) result:</CardDescription>
                     </CardHeader>
                     <CardContent className="text-base text-muted-foreground space-y-4 px-6 pb-6">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
@@ -227,6 +227,9 @@ export default function Home() {
                             <p><strong className="font-medium text-foreground">Perfectly Inelastic (PED = 0):</strong> Quantity demanded remains constant regardless of price (rare, e.g., essential goods).</p>
                             <p><strong className="font-medium text-foreground">Perfectly Elastic (PED = ∞):</strong> Consumers demand infinite quantity at a specific price, but none above (theoretical).</p>
                         </div>
+                         <p className="text-xs italic text-muted-foreground/80 pt-2">
+                           Note: If multiple data points are entered, the PED above is calculated using the first and last data points of your series. The graph shows the trend across all entered points.
+                        </p>
                     </CardContent>
                 </Card>
             </section>
@@ -243,7 +246,7 @@ export default function Home() {
                      <Link href="#" className="hover:text-primary hover:underline underline-offset-4 transition-colors">
                         Terms of Service
                     </Link>
-                     <Link href="/contact" className="hover:text-primary hover:underline underline-offset-4 transition-colors flex items-center gap-1">
+                     <Link href="#" className="hover:text-primary hover:underline underline-offset-4 transition-colors flex items-center gap-1">
                         <Phone size={14} /> Contact Us
                     </Link>
                 </nav>

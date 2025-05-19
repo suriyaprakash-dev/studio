@@ -7,10 +7,10 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label'; // Keep Label
+// Removed Label import as FormLabel is used
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import type { ElasticityInput, ElasticityResultData, DataPoint } from '@/app/actions'; // Import DataPoint
+import type { ElasticityInput, ElasticityResultData } from '@/app/actions';
 import { calculateElasticity } from '@/app/actions';
 import { useToast } from '@/hooks/use-toast';
 import { DollarSign, ShoppingCart, Calculator, Database, LoaderCircle, PlusCircle, Trash2 } from 'lucide-react';
@@ -22,7 +22,6 @@ const preprocessNumber = (a: unknown) => {
   return isNaN(num) ? undefined : num;
 };
 
-// Schema for a single data point, used within the array
 const dataPointSchema = z.object({
   price: z.preprocess(
     preprocessNumber,
@@ -36,14 +35,12 @@ const dataPointSchema = z.object({
   ),
 });
 
-// Main form schema using an array of data points
 const formSchema = z.object({
   points: z.array(dataPointSchema)
     .min(2, { message: 'At least two data points are required.' })
-    // You could add a max if needed, e.g., .max(10, "Maximum of 10 data points allowed.")
 });
 
-type FormValues = z.infer<typeof formSchema>; // This will be { points: Array<{price: number, quantity: number}> }
+type FormValues = z.infer<typeof formSchema>;
 
 interface ElasticityFormProps {
   onCalculationStart: () => void;
@@ -57,7 +54,7 @@ export function ElasticityForm({ onCalculationStart, onCalculationEnd }: Elastic
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      points: [ // Initialize with two points
+      points: [
         { price: undefined, quantity: undefined },
         { price: undefined, quantity: undefined },
       ],
@@ -75,7 +72,6 @@ export function ElasticityForm({ onCalculationStart, onCalculationEnd }: Elastic
     onCalculationStart();
     try {
       console.log("Submitting data:", data);
-      // The calculateElasticity action now expects { points: Array<DataPoint> }
       const result = await calculateElasticity(data);
       console.log("Received result:", result);
       onCalculationEnd(result, data);
@@ -86,9 +82,13 @@ export function ElasticityForm({ onCalculationStart, onCalculationEnd }: Elastic
            variant: "destructive",
          });
        } else {
+          let toastDescription = `Price Elasticity: ${isFinite(result.elasticity) ? result.elasticity.toFixed(3) : (result.elasticity > 0 ? '∞' : '-∞')}.`;
+          if (data.points.length > 2) {
+            toastDescription += " Calculated using first and last data points."
+          }
          toast({
            title: "Calculation Successful",
-           description: `Price Elasticity (using first two points): ${isFinite(result.elasticity) ? result.elasticity.toFixed(3) : (result.elasticity > 0 ? '∞' : '-∞')}`,
+           description: toastDescription,
            variant: "default",
          });
        }
@@ -113,7 +113,11 @@ export function ElasticityForm({ onCalculationStart, onCalculationEnd }: Elastic
               <Database size={24} />
              Data Input
             </CardTitle>
-            <CardDescription>Enter price and quantity data points. At least two are required.</CardDescription>
+            <CardDescription>
+              Enter price and quantity data points. At least two are required. 
+              You can add multiple points (e.g., monthly data for a year) to see trends. 
+              The primary PED calculation uses the first and last points if more than two are entered.
+            </CardDescription>
         </CardHeader>
         <CardContent>
              <Form {...form}>
@@ -122,8 +126,8 @@ export function ElasticityForm({ onCalculationStart, onCalculationEnd }: Elastic
                     {fields.map((item, index) => (
                       <div key={item.id} className="p-5 bg-muted/40 rounded-lg border border-border/30 shadow-inner space-y-4 relative">
                         <div className="flex justify-between items-center mb-2">
-                          <h3 className="text-lg font-medium text-foreground">Data Point {index + 1}</h3>
-                          {fields.length > 2 && ( // Only show remove button if more than 2 points
+                          <h3 className="text-lg font-medium text-foreground">Data Point {index + 1} {fields.length <= 12 ? `(${(["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"])[index] || ''})` : ''}</h3>
+                          {fields.length > 2 && (
                             <Button
                               type="button"
                               variant="ghost"

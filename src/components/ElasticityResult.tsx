@@ -6,7 +6,7 @@ import type { ElasticityResultData, ElasticityInput as ElasticityInputType } fro
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { TrendingUp, TrendingDown, Minus, BarChartBig, LoaderCircle, AlertCircle, Scale, DollarSign, LineChart as LineChartIcon, ShoppingCart } from 'lucide-react';
+import { TrendingUp, TrendingDown, Minus, BarChartBig, LoaderCircle, AlertCircle, LineChart as LineChartIcon, ShoppingCart } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip as RechartsTooltip, Legend as RechartsLegend } from 'recharts';
 import {
   ChartTooltip,
@@ -16,6 +16,7 @@ import {
   ChartLegendContent,
   type ChartConfig,
 } from "@/components/ui/chart";
+import { DollarSign } from 'lucide-react'; // Ensure DollarSign is imported if used here or in ChartConfig
 
 interface ElasticityResultProps {
   result: ElasticityResultData | null;
@@ -70,13 +71,12 @@ function getDescription(classification: ElasticityResultData['classification']):
         case 'Perfectly Elastic':
             return 'Consumers demand unlimited quantity at a specific price, but none above it (theoretical market condition).';
         case 'Invalid Input':
-            return 'Calculation requires valid inputs. Ensure prices/quantities are positive and represent a change.';
+            return 'Calculation requires valid inputs. Ensure prices/quantities are positive and represent a change between the first and last points.';
         default:
             return 'Input at least two data points to view the elasticity analysis.';
     }
 }
 
-// Configuration for the Trend Line Chart
 const trendChartConfig = {
   price: {
     label: "Price",
@@ -90,13 +90,16 @@ const trendChartConfig = {
   },
 } satisfies ChartConfig;
 
+const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
 export function ElasticityResult({ result, isLoading, inputData }: ElasticityResultProps) {
 
   const trendChartData = React.useMemo(() => {
     if (inputData && inputData.points && inputData.points.length > 0) {
       return inputData.points.map((point, index) => ({
-        name: `Point ${index + 1}`,
+        name: inputData.points.length <= 12 && index < monthNames.length 
+              ? monthNames[index] 
+              : `Point ${index + 1}`,
         price: point.price,
         quantity: point.quantity,
       }));
@@ -104,7 +107,17 @@ export function ElasticityResult({ result, isLoading, inputData }: ElasticityRes
     return [];
   }, [inputData]);
 
-  const showTrendChart = trendChartData.length >= 2; // Show trend if at least 2 points
+  const showTrendChart = trendChartData.length >= 1; // Show trend if at least 1 point
+
+  let pedDescriptionText = "Price Elasticity of Demand (PED)";
+  if (result && !result.error && inputData && inputData.points) {
+    if (inputData.points.length > 2) {
+      pedDescriptionText += " - using the first and last data points provided";
+    } else if (inputData.points.length === 2) {
+      pedDescriptionText += " - using the two data points provided";
+    }
+  }
+
 
   return (
     <Card className="w-full shadow-lg-custom rounded-xl border-border/60 bg-card h-full flex flex-col">
@@ -113,7 +126,7 @@ export function ElasticityResult({ result, isLoading, inputData }: ElasticityRes
           <BarChartBig size={24}/>
           Analysis Results
         </CardTitle>
-        <CardDescription>Price Elasticity of Demand (PED) - using first two data points</CardDescription>
+        <CardDescription>{pedDescriptionText}</CardDescription>
       </CardHeader>
       <CardContent className="flex-grow flex flex-col justify-start items-center text-center p-6 space-y-6">
         {isLoading ? (
@@ -168,6 +181,7 @@ export function ElasticityResult({ result, isLoading, inputData }: ElasticityRes
                             stroke="var(--color-price)"
                             tickFormatter={(value) => typeof value === 'number' ? `$${value.toFixed(2)}` : value}
                             tick={{ fontSize: 10 }}
+                            domain={['auto', 'auto']}
                           />
                           <YAxis
                             yAxisId="right"
@@ -175,6 +189,7 @@ export function ElasticityResult({ result, isLoading, inputData }: ElasticityRes
                             stroke="var(--color-quantity)"
                             tickFormatter={(value) => typeof value === 'number' ? `${value.toFixed(0)}` : value}
                             tick={{ fontSize: 10 }}
+                            domain={['auto', 'auto']}
                           />
                           <ChartTooltip
                             cursor={{ strokeDasharray: '3 3' }}
@@ -219,13 +234,14 @@ export function ElasticityResult({ result, isLoading, inputData }: ElasticityRes
                     </ChartContainer>
                     <p className="text-xs text-muted-foreground italic text-center max-w-md mx-auto">
                         Line graph showing the trend of price and quantity across all entered data points.
+                        {inputData && inputData.points.length <=12 && inputData.points.length > 0 && " (Interpreted as monthly data)"}
                     </p>
                 </div>
               </>
             )}
           </>
         ) : (
-          <p className="text-lg text-muted-foreground flex-grow flex items-center justify-center">Enter at least two data points to calculate elasticity.</p>
+          <p className="text-lg text-muted-foreground flex-grow flex items-center justify-center">Enter at least two data points to calculate elasticity and view trends.</p>
         )}
       </CardContent>
     </Card>

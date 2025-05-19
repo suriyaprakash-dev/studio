@@ -23,6 +23,7 @@ export type ElasticityResultData = {
   percentageChangeQ?: number;
   percentageChangeP?: number;
   error?: string;
+  pointsUsed?: { start: DataPoint, end: DataPoint };
 };
 
 export async function calculateElasticity(
@@ -40,10 +41,10 @@ export async function calculateElasticity(
 
   const { points } = validation.data;
 
-  // Use the first two points for PED calculation
-  // The form validation already ensures at least two points.
+  // Use the first and last points for PED calculation if more than two are provided.
+  // Otherwise, use the first two (which is covered by points.length >= 2 validation)
   const initialPoint = points[0];
-  const finalPoint = points[1];
+  const finalPoint = points[points.length - 1];
 
   const initialPrice = initialPoint.price;
   const finalPrice = finalPoint.price;
@@ -56,19 +57,19 @@ export async function calculateElasticity(
   const avgP = (finalPrice + initialPrice) / 2;
 
   if (deltaP === 0 && deltaQ === 0) {
-    return { elasticity: NaN, classification: 'Invalid Input', error: "Price and quantity haven't changed between the first two points." };
+    return { elasticity: NaN, classification: 'Invalid Input', error: "Price and quantity haven't changed between the selected data points.", pointsUsed: { start: initialPoint, end: finalPoint } };
   }
   if (deltaP === 0) {
      const percentageChangeQ = avgQ !== 0 ? Math.abs(deltaQ / avgQ) : Infinity;
-    return { elasticity: Infinity, classification: 'Perfectly Elastic', percentageChangeQ: percentageChangeQ, percentageChangeP: 0 };
+    return { elasticity: Infinity, classification: 'Perfectly Elastic', percentageChangeQ: percentageChangeQ, percentageChangeP: 0, pointsUsed: { start: initialPoint, end: finalPoint } };
   }
    if (deltaQ === 0) {
     const percentageChangeP = avgP !== 0 ? Math.abs(deltaP / avgP) : Infinity;
-    return { elasticity: 0, classification: 'Perfectly Inelastic', percentageChangeQ: 0, percentageChangeP: percentageChangeP };
+    return { elasticity: 0, classification: 'Perfectly Inelastic', percentageChangeQ: 0, percentageChangeP: percentageChangeP, pointsUsed: { start: initialPoint, end: finalPoint } };
   }
 
   if (avgQ === 0 || avgP === 0) {
-      return { elasticity: NaN, classification: 'Invalid Input', error: 'Average price or quantity (for the first two points) cannot be zero.' };
+      return { elasticity: NaN, classification: 'Invalid Input', error: 'Average price or quantity (for the selected data points) cannot be zero.', pointsUsed: { start: initialPoint, end: finalPoint } };
   }
 
   const percentageChangeQRaw = deltaQ / avgQ;
@@ -99,6 +100,7 @@ export async function calculateElasticity(
       elasticity,
       classification,
       percentageChangeQ: absPercentageChangeQ,
-      percentageChangeP: absPercentageChangeP
+      percentageChangeP: absPercentageChangeP,
+      pointsUsed: { start: initialPoint, end: finalPoint }
     };
 }
