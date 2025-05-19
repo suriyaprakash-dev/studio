@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 // Removed Form components
-import { useToast } from '@/hooks/use-toast';
+import { useToast } from '@/hooks/use-toast'; // Keep toast if needed for other interactions
 import { LogIn, UserPlus } from 'lucide-react'; // Removed LoaderCircle, AlertTriangle
 
 // Removed form schema and type definition
@@ -18,23 +18,24 @@ import { LogIn, UserPlus } from 'lucide-react'; // Removed LoaderCircle, AlertTr
 // Removed simulated user interface
 
 export default function SignUpPage() {
-  const { toast } = useToast(); // Keep toast if needed for other interactions, though not used here now
+  const { toast } = useToast();
   const router = useRouter();
   // Removed isSubmitting state
 
   // Removed form instance
 
-  // Simplified handler to just navigate
+  // Simplified handler to just navigate to the login page
   const handleSignUpClick = () => {
-    console.log("Simulating signup and redirecting...");
+    console.log("Simulating signup and redirecting to login...");
     // Optionally show a message before redirecting
-    // toast({
-    //     title: "Redirecting...",
-    //     description: "Taking you to the main page.",
-    // });
+    toast({
+        title: "Sign Up Successful (Simulated)",
+        description: "Please log in to continue.",
+        variant: "default",
+    });
 
-    // Directly redirect to the main page
-    router.push('/');
+    // Directly redirect to the login page
+    router.push('/login');
   };
 
 
@@ -70,7 +71,7 @@ export default function SignUpPage() {
               <Button type="button" onClick={handleSignUpClick} className="w-full text-lg py-3 rounded-lg transition-transform transform hover:scale-105 mt-4">
                   {/* Simplified button text */}
                   <UserPlus size={20} className="mr-2" />
-                  Sign Up & Go to Main Page
+                  Sign Up & Proceed to Login
               </Button>
            </div>
         </CardContent>
@@ -89,3 +90,4 @@ export default function SignUpPage() {
     </main>
   );
 }
+
