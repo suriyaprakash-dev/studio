@@ -6,8 +6,8 @@ import type { ElasticityResultData, ElasticityInput as ElasticityInputType } fro
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { TrendingUp, TrendingDown, Minus, BarChartBig, LoaderCircle, AlertCircle, Scale, DollarSign, BarChart2 } from 'lucide-react'; // Changed PieChartIcon to BarChart2
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Cell } from 'recharts'; // Added BarChart imports
+import { TrendingUp, TrendingDown, Minus, BarChartBig, LoaderCircle, AlertCircle, Scale, DollarSign, LineChart as LineChartIcon } from 'lucide-react'; // Changed BarChart2 to LineChartIcon
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from 'recharts'; // Changed BarChart imports to LineChart
 import {
   ChartTooltip,
   ChartTooltipContent,
@@ -76,8 +76,8 @@ function getDescription(classification: ElasticityResultData['classification']):
     }
 }
 
-// Configuration for the Bar Chart
-const barChartConfig = {
+// Configuration for the Line Chart
+const lineChartConfig = {
   price: {
     label: "% Change Price",
     color: "hsl(var(--chart-1))",
@@ -95,9 +95,9 @@ export function ElasticityResult({ result, isLoading, inputData }: ElasticityRes
 
   const showChart = result && !result.error && result.percentageChangeP !== undefined && result.percentageChangeQ !== undefined;
 
-  // Data for the Bar Chart
-  // It's an array with one object, where keys 'price' and 'quantity' will be used for dataKeys of Bars
-  const chartDataForBar = showChart
+  // Data for the Line Chart
+  // It's an array with one object, where keys 'price' and 'quantity' will be used for dataKeys of Lines
+  const chartDataForLine = showChart
     ? [{
         name: 'Comparison', // This name is for the XAxis category
         price: result.percentageChangeP! * 100, // Values are percentages
@@ -160,38 +160,54 @@ export function ElasticityResult({ result, isLoading, inputData }: ElasticityRes
                  <p className="text-sm text-muted-foreground pt-2 max-w-xs">{getDescription(result.classification)}</p>
             </div>
 
-            {showChart && chartDataForBar.length > 0 && (
+            {showChart && chartDataForLine.length > 0 && (
               <>
                 <Separator className="my-4 w-3/4 mx-auto" />
                 <div className="w-full space-y-3">
                     <h3 className="text-lg font-medium text-foreground flex items-center justify-center gap-2">
-                        <BarChart2 size={20} /> Relative Change Magnitude
+                        <LineChartIcon size={20} /> Relative Change Magnitude
                     </h3>
-                    <ChartContainer config={barChartConfig} className="mx-auto aspect-[16/10] h-[250px] w-full">
+                    <ChartContainer config={lineChartConfig} className="mx-auto aspect-[16/10] h-[250px] w-full">
                       <ResponsiveContainer width="100%" height="100%">
-                        <BarChart data={chartDataForBar} margin={{ top: 20, right: 10, left: -10, bottom: 5 }} barSize={40}>
+                        <LineChart data={chartDataForLine} margin={{ top: 20, right: 20, left: -10, bottom: 5 }}>
                           <CartesianGrid vertical={false} strokeDasharray="3 3" />
                           <XAxis
                             dataKey="name"
                             tickLine={false}
                             axisLine={false}
-                            tick={false} // Hide tick label "Comparison" as it's not very informative here
+                            tick={false} 
                             label={{ value: "Comparison Metric", position: 'insideBottom', dy: 10, fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
                           />
                           <YAxis
                             tickFormatter={(value) => `${value.toFixed(0)}%`}
-                            domain={[0, 'dataMax + 10']} // Add some padding to Y-axis
+                            domain={[0, 'dataMax + 10']} 
                             allowDataOverflow={true}
                             width={50}
                            />
                           <ChartTooltip
-                            cursor={{ fill: 'hsl(var(--background))', radius: 4 }}
+                            cursor={{ strokeDasharray: '3 3' }}
                             content={<ChartTooltipContent indicator="dot" />}
                           />
                           <ChartLegend content={<ChartLegendContent />} />
-                          <Bar dataKey="price" name="price" fill="var(--color-price)" radius={[4, 4, 0, 0]} />
-                          <Bar dataKey="quantity" name="quantity" fill="var(--color-quantity)" radius={[4, 4, 0, 0]} />
-                        </BarChart>
+                          <Line
+                            type="monotone"
+                            dataKey="price"
+                            stroke="var(--color-price)"
+                            strokeWidth={2}
+                            dot={{ r: 4, fill: "var(--color-price)" }}
+                            activeDot={{ r: 6 }}
+                            name="price" // Name used by legend and tooltip
+                          />
+                          <Line
+                            type="monotone"
+                            dataKey="quantity"
+                            stroke="var(--color-quantity)"
+                            strokeWidth={2}
+                            dot={{ r: 4, fill: "var(--color-quantity)" }}
+                            activeDot={{ r: 6 }}
+                            name="quantity" // Name used by legend and tooltip
+                          />
+                        </LineChart>
                       </ResponsiveContainer>
                     </ChartContainer>
                     <p className="text-xs text-muted-foreground italic text-center max-w-md mx-auto">
@@ -209,3 +225,4 @@ export function ElasticityResult({ result, isLoading, inputData }: ElasticityRes
     </Card>
   );
 }
+
