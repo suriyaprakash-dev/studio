@@ -4,38 +4,73 @@
 import * as React from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-// Removed react-hook-form and zod imports
+import { useForm, type SubmitHandler } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { Label } from '@/components/ui/label'; // Keep Label for direct use if needed, though FormLabel is preferred within Form
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
-// Removed Form components
-import { useToast } from '@/hooks/use-toast'; // Keep toast if needed for other interactions
-import { LogIn, UserPlus } from 'lucide-react'; // Removed LoaderCircle, AlertTriangle
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { useToast } from '@/hooks/use-toast';
+import { LogIn, UserPlus, LoaderCircle } from 'lucide-react';
 
-// Removed form schema and type definition
+// Define the validation schema using Zod
+const formSchema = z.object({
+  email: z.string().email({ message: 'Invalid email address' }),
+  password: z.string().min(8, { message: 'Password must be at least 8 characters' }),
+  confirmPassword: z.string(),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Passwords don't match",
+  path: ['confirmPassword'], // Set error path to confirmPassword field
+});
 
-// Removed simulated user interface
+type SignUpFormInput = z.infer<typeof formSchema>;
+
+// Simulate a user object (replace with your actual user data structure if needed)
+interface SimulatedUser {
+    uid: string;
+    email: string;
+}
 
 export default function SignUpPage() {
   const { toast } = useToast();
   const router = useRouter();
-  // Removed isSubmitting state
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
 
-  // Removed form instance
+  const form = useForm<SignUpFormInput>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      email: '',
+      password: '',
+      confirmPassword: '',
+    },
+    mode: 'onChange', // Validate on change for better UX
+  });
 
-  // Simplified handler to just navigate to the login page
-  const handleSignUpClick = () => {
-    console.log("Simulating signup and redirecting to login...");
-    // Optionally show a message before redirecting
+  // onSubmit handler - Simulate signup
+  const onSubmit: SubmitHandler<SignUpFormInput> = async (data) => {
+    setIsSubmitting(true);
+    console.log("Simulating signup with:", data);
+
+    // Simulate API call delay
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    // Simulate signup success (always succeeds for this example)
+    const simulatedUser: SimulatedUser = { uid: `simulated-user-${Date.now()}`, email: data.email };
+    console.log("Simulated Signup successful:", simulatedUser);
+
+    // Show success message
     toast({
         title: "Sign Up Successful (Simulated)",
-        description: "Please log in to continue.",
+        description: "Please log in with your new account.",
         variant: "default",
     });
 
-    // Directly redirect to the login page
+    // Redirect to login page
     router.push('/login');
+
+    // No need to set isSubmitting to false here as we are redirecting
   };
 
 
@@ -46,34 +81,65 @@ export default function SignUpPage() {
           <CardTitle className="text-3xl font-bold text-primary flex items-center justify-center gap-2">
              <UserPlus size={28} /> Sign Up
           </CardTitle>
-          <CardDescription>Create a new PriceLens account (Dummy).</CardDescription>
+          <CardDescription>Create your PriceLens account.</CardDescription>
         </CardHeader>
         <CardContent>
-          {/* Removed Form wrapper */}
-          {/* Simplified form structure - inputs are present but not functional */}
-          <div className="space-y-5">
-              <div>
-                <Label htmlFor="email">Email Address</Label>
-                <Input id="email" type="email" placeholder="you@example.com" disabled />
-                {/* Removed FormMessage */}
-              </div>
-              <div>
-                <Label htmlFor="password">Password</Label>
-                <Input id="password" type="password" placeholder="•••••••• (min. 8 characters)" disabled />
-                {/* Removed FormMessage */}
-              </div>
-              <div>
-                <Label htmlFor="confirmPassword">Confirm Password</Label>
-                <Input id="confirmPassword" type="password" placeholder="••••••••" disabled />
-                {/* Removed FormMessage */}
-              </div>
-              {/* Changed Button type to "button" and added onClick handler */}
-              <Button type="button" onClick={handleSignUpClick} className="w-full text-lg py-3 rounded-lg transition-transform transform hover:scale-105 mt-4">
-                  {/* Simplified button text */}
-                  <UserPlus size={20} className="mr-2" />
-                  Sign Up & Proceed to Login
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email Address</FormLabel>
+                    <FormControl>
+                      <Input type="email" placeholder="you@example.com" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="password"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Password</FormLabel>
+                    <FormControl>
+                      <Input type="password" placeholder="•••••••• (min. 8 characters)" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="confirmPassword"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Confirm Password</FormLabel>
+                    <FormControl>
+                      <Input type="password" placeholder="••••••••" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <Button type="submit" disabled={isSubmitting} className="w-full text-lg py-3 rounded-lg transition-transform transform hover:scale-105 mt-4">
+                {isSubmitting ? (
+                  <>
+                    <LoaderCircle className="animate-spin mr-2" size={20} />
+                    Signing Up...
+                  </>
+                ) : (
+                  <>
+                    <UserPlus size={20} className="mr-2" />
+                    Sign Up
+                  </>
+                )}
               </Button>
-           </div>
+           </form>
+          </Form>
         </CardContent>
          <CardFooter className="flex justify-center items-center pt-4 pb-6">
             <p className="text-sm text-muted-foreground">
@@ -90,4 +156,3 @@ export default function SignUpPage() {
     </main>
   );
 }
-
