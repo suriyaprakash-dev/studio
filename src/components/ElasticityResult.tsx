@@ -6,15 +6,15 @@ import type { ElasticityResultData, ElasticityInput as ElasticityInputType } fro
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { TrendingUp, TrendingDown, Minus, BarChartBig, LoaderCircle, AlertCircle, Scale, DollarSign, LineChart as LineChartIcon } from 'lucide-react'; // Changed BarChart2 to LineChartIcon
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from 'recharts'; // Changed BarChart imports to LineChart
+import { TrendingUp, TrendingDown, Minus, BarChartBig, LoaderCircle, AlertCircle, Scale, DollarSign, LineChart as LineChartIcon, ShoppingCart } from 'lucide-react';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip as RechartsTooltip, Legend as RechartsLegend } from 'recharts';
 import {
   ChartTooltip,
   ChartTooltipContent,
   ChartContainer,
   ChartLegend,
   ChartLegendContent,
-  type ChartConfig, // Import ChartConfig type
+  type ChartConfig,
 } from "@/components/ui/chart";
 
 interface ElasticityResultProps {
@@ -76,49 +76,35 @@ function getDescription(classification: ElasticityResultData['classification']):
     }
 }
 
-// Configuration for the Line Chart
-const lineChartConfig = {
+// Configuration for the Trend Line Chart
+const trendChartConfig = {
   price: {
-    label: "% Change Price",
+    label: "Price",
     color: "hsl(var(--chart-1))",
     icon: DollarSign,
   },
   quantity: {
-    label: "% Change Quantity",
+    label: "Quantity",
     color: "hsl(var(--chart-2))",
-    icon: Scale,
+    icon: ShoppingCart,
   },
 } satisfies ChartConfig;
 
 
 export function ElasticityResult({ result, isLoading, inputData }: ElasticityResultProps) {
 
-  const showChart = result && !result.error && result.percentageChangeP !== undefined && result.percentageChangeQ !== undefined;
-
-  // Data for the Line Chart
-  // It's an array with one object, where keys 'price' and 'quantity' will be used for dataKeys of Lines
-  const chartDataForLine = showChart
-    ? [{
-        name: 'Comparison', // This name is for the XAxis category
-        price: result.percentageChangeP! * 100, // Values are percentages
-        quantity: result.percentageChangeQ! * 100,
-      }]
-    : [];
-
-  let priceIncreased: boolean | undefined;
-  let quantityIncreased: boolean | undefined;
-
-  if (inputData && inputData.points && inputData.points.length >= 2) {
-    const firstPoint = inputData.points[0];
-    const secondPoint = inputData.points[1];
-    if (firstPoint && secondPoint && typeof firstPoint.price === 'number' && typeof secondPoint.price === 'number') {
-        priceIncreased = secondPoint.price > firstPoint.price;
+  const trendChartData = React.useMemo(() => {
+    if (inputData && inputData.points && inputData.points.length > 0) {
+      return inputData.points.map((point, index) => ({
+        name: `Point ${index + 1}`,
+        price: point.price,
+        quantity: point.quantity,
+      }));
     }
-    if (firstPoint && secondPoint && typeof firstPoint.quantity === 'number' && typeof secondPoint.quantity === 'number') {
-        quantityIncreased = secondPoint.quantity > firstPoint.quantity;
-    }
-  }
+    return [];
+  }, [inputData]);
 
+  const showTrendChart = trendChartData.length >= 2; // Show trend if at least 2 points
 
   return (
     <Card className="w-full shadow-lg-custom rounded-xl border-border/60 bg-card h-full flex flex-col">
@@ -160,59 +146,79 @@ export function ElasticityResult({ result, isLoading, inputData }: ElasticityRes
                  <p className="text-sm text-muted-foreground pt-2 max-w-xs">{getDescription(result.classification)}</p>
             </div>
 
-            {showChart && chartDataForLine.length > 0 && (
+            {showTrendChart && (
               <>
                 <Separator className="my-4 w-3/4 mx-auto" />
                 <div className="w-full space-y-3">
                     <h3 className="text-lg font-medium text-foreground flex items-center justify-center gap-2">
-                        <LineChartIcon size={20} /> Relative Change Magnitude
+                        <LineChartIcon size={20} /> Price & Quantity Trend
                     </h3>
-                    <ChartContainer config={lineChartConfig} className="mx-auto aspect-[16/10] h-[250px] w-full">
+                    <ChartContainer config={trendChartConfig} className="mx-auto aspect-[16/9] h-[300px] w-full">
                       <ResponsiveContainer width="100%" height="100%">
-                        <LineChart data={chartDataForLine} margin={{ top: 20, right: 20, left: -10, bottom: 5 }}>
-                          <CartesianGrid vertical={false} strokeDasharray="3 3" />
+                        <LineChart data={trendChartData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+                          <CartesianGrid strokeDasharray="3 3" vertical={false} />
                           <XAxis
                             dataKey="name"
-                            tickLine={false}
-                            axisLine={false}
-                            tick={false} 
-                            label={{ value: "Comparison Metric", position: 'insideBottom', dy: 10, fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
+                            tickLine={true}
+                            axisLine={true}
+                            tick={{ fontSize: 10 }}
                           />
                           <YAxis
-                            tickFormatter={(value) => `${value.toFixed(0)}%`}
-                            domain={[0, 'dataMax + 10']} 
-                            allowDataOverflow={true}
-                            width={50}
-                           />
+                            yAxisId="left"
+                            stroke="var(--color-price)"
+                            tickFormatter={(value) => typeof value === 'number' ? `$${value.toFixed(2)}` : value}
+                            tick={{ fontSize: 10 }}
+                          />
+                          <YAxis
+                            yAxisId="right"
+                            orientation="right"
+                            stroke="var(--color-quantity)"
+                            tickFormatter={(value) => typeof value === 'number' ? `${value.toFixed(0)}` : value}
+                            tick={{ fontSize: 10 }}
+                          />
                           <ChartTooltip
                             cursor={{ strokeDasharray: '3 3' }}
-                            content={<ChartTooltipContent indicator="dot" />}
+                            content={
+                                <ChartTooltipContent
+                                    indicator="dot"
+                                    formatter={(value, name, props) => {
+                                        if (name === 'price' && typeof value === 'number') {
+                                            return `$${value.toFixed(2)}`;
+                                        }
+                                        if (name === 'quantity' && typeof value === 'number') {
+                                            return `${value.toFixed(0)} units`;
+                                        }
+                                        return value;
+                                    }}
+                                />
+                            }
                           />
                           <ChartLegend content={<ChartLegendContent />} />
                           <Line
+                            yAxisId="left"
                             type="monotone"
                             dataKey="price"
                             stroke="var(--color-price)"
                             strokeWidth={2}
                             dot={{ r: 4, fill: "var(--color-price)" }}
                             activeDot={{ r: 6 }}
-                            name="price" // Name used by legend and tooltip
+                            name="Price"
                           />
                           <Line
+                            yAxisId="right"
                             type="monotone"
                             dataKey="quantity"
                             stroke="var(--color-quantity)"
                             strokeWidth={2}
                             dot={{ r: 4, fill: "var(--color-quantity)" }}
                             activeDot={{ r: 6 }}
-                            name="quantity" // Name used by legend and tooltip
+                            name="Quantity"
                           />
                         </LineChart>
                       </ResponsiveContainer>
                     </ChartContainer>
                     <p className="text-xs text-muted-foreground italic text-center max-w-md mx-auto">
-                        Shows the absolute percentage change in price vs. quantity (using the first two data points).
-                        {priceIncreased !== undefined && quantityIncreased !== undefined && ` Price ${priceIncreased ? 'increased' : 'decreased'}, Quantity ${quantityIncreased ? 'increased' : 'decreased'}.`}
+                        Line graph showing the trend of price and quantity across all entered data points.
                     </p>
                 </div>
               </>
@@ -225,4 +231,3 @@ export function ElasticityResult({ result, isLoading, inputData }: ElasticityRes
     </Card>
   );
 }
-
