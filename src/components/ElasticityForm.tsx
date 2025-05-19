@@ -38,6 +38,7 @@ const dataPointSchema = z.object({
 const formSchema = z.object({
   points: z.array(dataPointSchema)
     .min(2, { message: 'At least two data points are required.' })
+    .max(100, {message: 'Maximum of 100 data points allowed.'}) // Added a max for sensibility
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -47,6 +48,9 @@ interface ElasticityFormProps {
   onCalculationEnd: (result: ElasticityResultData, inputData?: FormValues) => void;
 }
 
+const defaultTwelvePoints = Array(12).fill(null).map(() => ({ price: undefined, quantity: undefined }));
+const monthNamesShort = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
 export function ElasticityForm({ onCalculationStart, onCalculationEnd }: ElasticityFormProps) {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
@@ -54,10 +58,7 @@ export function ElasticityForm({ onCalculationStart, onCalculationEnd }: Elastic
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      points: [
-        { price: undefined, quantity: undefined },
-        { price: undefined, quantity: undefined },
-      ],
+      points: defaultTwelvePoints,
     },
     mode: 'onChange',
   });
@@ -114,9 +115,9 @@ export function ElasticityForm({ onCalculationStart, onCalculationEnd }: Elastic
              Data Input
             </CardTitle>
             <CardDescription>
-              Enter price and quantity data points. At least two are required. 
-              You can add multiple points (e.g., monthly data for a year) to see trends. 
-              The primary PED calculation uses the first and last points if more than two are entered.
+              Defaults to 12 data points for monthly input over a year. Adjust as needed (min. 2 points).
+              The primary PED calculation uses the first and last points of your series.
+              The graph will visualize all entered points.
             </CardDescription>
         </CardHeader>
         <CardContent>
@@ -126,7 +127,9 @@ export function ElasticityForm({ onCalculationStart, onCalculationEnd }: Elastic
                     {fields.map((item, index) => (
                       <div key={item.id} className="p-5 bg-muted/40 rounded-lg border border-border/30 shadow-inner space-y-4 relative">
                         <div className="flex justify-between items-center mb-2">
-                          <h3 className="text-lg font-medium text-foreground">Data Point {index + 1} {fields.length <= 12 ? `(${(["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"])[index] || ''})` : ''}</h3>
+                           <h3 className="text-lg font-medium text-foreground">
+                            Data Point {index + 1} {fields.length <= 12 && index < monthNamesShort.length ? `(${monthNamesShort[index]})` : ''}
+                          </h3>
                           {fields.length > 2 && (
                             <Button
                               type="button"
